@@ -1,0 +1,49 @@
+# MYCELIUM CI: firmware build, every host test, web tests.
+name: ci
+on:
+  push:
+    branches: [main]          # feature branches: CI runs through their PR
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    runs-on: ubuntu-24.04            # x86-64: the JieLi toolchain runs natively
+    env:
+      JIELI_TOOLCHAIN: ${{ github.workspace }}/.jieli/toolchain
+      AC79_SDK: ${{ github.workspace }}/.ac79
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: pip install Pillow
+
+      - name: JieLi toolchain and SDK files (cached)
+        uses: actions/cache@v4
+        with:
+          path: |
+            .jieli
+            .ac79
+          key: jieli-${{ hashFiles('tools/get_toolchain.sh', 'tools/get_sdk_files.sh') }}
+      - run: |
+          [ -e .jieli/toolchain ] || tools/get_toolchain.sh .jieli
+          tools/get_sdk_files.sh .ac79
+
+      - name: Build
+        run: ./build.sh
+      - name: Host tests
+        run: sh tests/run_tests.sh
+        env:
+          SOAK_MIN: 1              # the full 10-minute soak runs on release.yml
+      - name: Package hash
+        run: sha256sum build/felucca.fwsc
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mycelium-${{ github.sha }}
+          path: build/felucca.fwsc

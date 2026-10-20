@@ -1,0 +1,19 @@
+name: Sound or kit request
+description: A preset, drum kit or feature for the sound bank
+labels: [sound-bank]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Factory sounds are original designs. Do not attach or paste third-party preset data
+        (Serum, Vital, DX7 banks...): describe the sound instead — engine, range, reference track.
+  - type: dropdown
+    attributes:
+      label: Engine
+      options: [ANALOG (VA), DIGITAL (FM), PHASE, LOFI, SAMPLE, FORMANT, TRIO, DRAWBAR, GRAIN, DRUMS]
+  - type: textarea
+    attributes:
+      label: The sound
+      description: Attack / movement / role in a mix, a reference you hear it in.
+    validations:
+      required: true

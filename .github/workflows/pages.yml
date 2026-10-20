@@ -1,0 +1,54 @@
+# MYCELIUM Pages: build the firmware, make the installer + editor site, publish it.
+name: pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    env:
+      JIELI_TOOLCHAIN: ${{ github.workspace }}/.jieli/toolchain
+      AC79_SDK: ${{ github.workspace }}/.ac79
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install Pillow
+      - uses: actions/cache@v4
+        with:
+          path: |
+            .jieli
+            .ac79
+          key: jieli-${{ hashFiles('tools/get_toolchain.sh', 'tools/get_sdk_files.sh') }}
+      - run: |
+          [ -e .jieli/toolchain ] || tools/get_toolchain.sh .jieli
+          tools/get_sdk_files.sh .ac79
+      - name: Build
+        run: ./build.sh
+      - name: Make the site
+        run: python3 web/make_site.py build/felucca.fwsc 1.0 site
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

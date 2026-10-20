@@ -1,0 +1,141 @@
+{
+  "design": "Mandalars original procedural drum collection",
+  "audio_inputs": [],
+  "assets": [
+    {
+      "file": "PSY-KICK.wav",
+      "role": "KICK",
+      "kit_name": "PSY",
+      "sr": 44100,
+      "duration": 0.28,
+      "sha256": "f6fa72af79465803647af32f5475778aae8c4fb5c8fb8fec1d35753ab102e9bf",
+      "source": "Original procedural synthesis: tools/gen_mandalars_drums.py; no external audio input"
+    },
+    {
+      "file": "PSY-HAT.wav",
+      "role": "HAT",
+      "kit_name": "PSY",
+      "sr": 44100,
+      "duration": 0.10498866213151928,
+      "sha256": "e5582204b3a693229e540e7048e79d265fb92d30a19a40791c5e9b1c7332357c",
+      "source": "Original procedural synthesis: tools/gen_mandalars_drums.py; no external audio input"
+    },
+    {
+      "file": "PSY-CLAP.wav",
+      "role": "CLAP",
+      "kit_name": "PSY",
+      "sr": 44100,
+      "duration": 0.15,
+      "sha256": "b0dac5ec3aa8504753a26bcece10e3131a37403c3efc31d5047e3caef3baef25",
+      "source": "Original procedural synthesis: tools/gen_mandalars_drums.py; no external audio input"
+    },
+    {
+      "file": "PSY-PERC.wav",
+      "role": "PERC",
+      "kit_name": "PSY",
+      "sr": 44100,
+      "duration": 0.13,
+      "sha256": "f0f8d2e0e656c2daf76d151ae8bf97faec136a43ae66fcb1dbdc1fc48cd4a2f0",
+      "source": "Original procedural synthesis: tools/gen_mandalars_drums.py; no external audio input"
+    },
+    {
+      "file": "PSY-SNARE.wav",
+      "role": "SNARE",
+      "kit_name": "PSY",
+      "sr": 44100,
+      "duration": 0.14,
+      "sha256": "202d9a5f307c149ed61b4858c2c3685f69e4375b6bcfcdaa446b1f3ecbde33b7",
+      "source": "Original procedural synthesis: tools/gen_mandalars_drums.py; no external audio input"
+    },
+    {
+      "file": "FOREST-KICK.wav",
+      "role": "KICK",
+      "kit_name": "FOREST",
+      "sr": 44100,
+      "duration": 0.28,
+      "sha256": "a9a92a77d27c0968268e44edced2189b13fa79a80c709ca1bc70c667e1765e91",
+      "source": "Original procedural synthesis: tools/gen_mandalars_drums.py; no external audio input"
+    },
+    {
+      "file": "FOREST-HAT.wav",
+      "role": "HAT",
+      "kit_name": "FOREST",
+      "sr": 44100,
+      "duration": 0.10498866213151928,
+      "sha256": "412d0dcec4d0809a118b9853e4a590075fef3d2499f3682e6289d9ded0257ce8",
+      "source": "Original procedural synthesis: tools/gen_mandalars_drums.py; no external audio input"
+    },
+    {
+      "file": "FOREST-CLAP.wav",
+      "role": "CLAP",
+      "kit_name": "FOREST",
+      "sr": 44100,
+      "duration": 0.15,
+      "sha256": "65d7e8061181a43ab3e728f45b6951f6866da4ab7d8854a7c200bcd6a0ae0100",
+      "source": "Original procedural synthesis: tools/gen_mandalars_drums.py; no external audio input"
+    },
+    {
+      "file": "FOREST-PERC.wav",
+      "role": "PERC",
+      "kit_name": "FOREST",
+      "sr": 44100,
+      "duration": 0.13,
+      "sha256": "73c4e4d56effc92d15ef8eccf2d38688cfceb8eafe2d6237147a1f7025832625",
+      "source": "Original procedural synthesis: tools/gen_mandalars_drums.py; no external audio input"
+    },
+    {
+      "file": "FOREST-SNARE.wav",
+      "role": "SNARE",
+      "kit_name": "FOREST",
+      "sr": 44100,
+      "duration": 0.14,
+      "sha256": "4e192f0b8246fddf3a195707eb6f8652a03d58fe9cc0051705bbba92b78d23a0",
+      "source": "Original procedural synthesis: tools/gen_mandalars_drums.py; no external audio input"
+    },
+    {
+      "file": "HITECH-KICK.wav",
+      "role": "KICK",
+      "kit_name": "HITECH",
+      "sr": 44100,
+      "duration": 0.28,
+      "sha256": "474d8bdd13248f9f316d0e09e08cd80a41512177eee727649b7a2fe866d81b39",
+      "source": "Original procedural synthesis: tools/gen_mandalars_drums.py; no external audio input"
+    },
+    {
+      "file": "HITECH-HAT.wav",
+      "role": "HAT",
+      "kit_name": "HITECH",
+      "sr": 44100,
+      "duration": 0.10498866213151928,
+      "sha256": "5c39350350a720eb0744f96ebdf6b741cbadd32c744e05974bb38d3f26214ea1",
+      "source": "Original procedural synthesis: tools/gen_mandalars_drums.py; no external audio input"
+    },
+    {
+      "file": "HITECH-CLAP.wav",
+      "role": "CLAP",
+      "kit_name": "HITECH",
+      "sr": 44100,
+      "duration": 0.15,
+      "sha256": "84bb04d7d4b76807983a9445313dbba9e50f41f93d205fc16905be0c477a1c48",
+      "source": "Original procedural synthesis: tools/gen_mandalars_drums.py; no external audio input"
+    },
+    {
+      "file": "HITECH-PERC.wav",
+      "role": "PERC",
+      "kit_name": "HITECH",
+      "sr": 44100,
+      "duration": 0.13,
+      "sha256": "ec7822d0a764752986328f0c1b2f4532051e228338d45a4b2257836baf206c73",
+      "source": "Original procedural synthesis: tools/gen_mandalars_drums.py; no external audio input"
+    },
+    {
+      "file": "HITECH-SNARE.wav",
+      "role": "SNARE",
+      "kit_name": "HITECH",
+      "sr": 44100,
+      "duration": 0.14,
+      "sha256": "e26b8223c5506353bb6f5238feac8374cadbb241fb39281a13249cc99e6907f7",
+      "source": "Original procedural synthesis: tools/gen_mandalars_drums.py; no external audio input"
+    }
+  ]
+}

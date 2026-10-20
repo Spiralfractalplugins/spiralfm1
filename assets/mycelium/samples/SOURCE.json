@@ -1,0 +1,9 @@
+{
+  "file": "FOREST-KICK.wav",
+  "role": "KICK",
+  "kit_name": "FOREST",
+  "sr": 44100,
+  "duration": 0.28,
+  "sha256": "a9a92a77d27c0968268e44edced2189b13fa79a80c709ca1bc70c667e1765e91",
+  "source": "Original procedural synthesis: tools/gen_mandalars_drums.py; no external audio input"
+}

@@ -1,0 +1,64 @@
+# MYCELIUM releases: on a version tag, build and publish the .fwsc and the installer site.
+# The build keeps the development identity FM-1_900 (like upstream's released packages):
+# the device only OTA-installs its own family, so a release must match the Pages installer.
+name: release
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    env:
+      JIELI_TOOLCHAIN: ${{ github.workspace }}/.jieli/toolchain
+      AC79_SDK: ${{ github.workspace }}/.ac79
+    steps:
+      - uses: actions/checkout@v4
+      - name: Version from the tag (before anything uses it)
+        id: ver
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          if ! [[ "$v" =~ ^[0-9](\.[0-9A-Za-z-]+)?$ ]]; then
+            echo "bad tag name $GITHUB_REF_NAME: expected vX[.Y[-suffix]]" >&2
+            exit 1
+          fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install Pillow
+      - uses: actions/cache@v4
+        with:
+          path: |
+            .jieli
+            .ac79
+          key: jieli-${{ hashFiles('tools/get_toolchain.sh', 'tools/get_sdk_files.sh') }}
+      - run: |
+          [ -e .jieli/toolchain ] || tools/get_toolchain.sh .jieli
+          tools/get_sdk_files.sh .ac79
+      - name: Build
+        run: ./build.sh
+      - name: Host tests before releasing
+        run: sh tests/run_tests.sh
+      - name: Make the installer site
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+        run: python3 web/make_site.py build/felucca.fwsc "$VERSION" site
+      - name: Package the site and the hashes
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          cp build/felucca.fwsc "mycelium-$VERSION.fwsc"
+          sha256sum "mycelium-$VERSION.fwsc" > SHA256SUMS.txt
+          (cd site && zip -qr "../mycelium-$VERSION-site.zip" .)
+      - uses: softprops/action-gh-release@v2
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+        with:
+          files: |
+            mycelium-${{ env.VERSION }}.fwsc
+            mycelium-${{ env.VERSION }}-site.zip
+            SHA256SUMS.txt

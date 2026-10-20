@@ -1,0 +1,24 @@
+name: Bug report
+description: Something does not build, install, sound or behave right
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For firmware bugs: which MYCELIUM version (`git describe` or the release tag), which FM-1
+        stock firmware (V15?), which page / engine / preset. Flashing firmware is at your own risk.
+  - type: textarea
+    attributes:
+      label: What happened
+      description: Steps, what you heard / saw, what you expected.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Build and test output
+      description: If it builds, paste the tail of ./build.sh and sh tests/run_tests.sh.
+      render: text
+  - type: input
+    attributes:
+      label: Host / device
+      placeholder: "e.g. macOS 27 + Docker build, FM-1 device, Chrome installer"

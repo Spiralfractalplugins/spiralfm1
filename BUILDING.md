@@ -115,5 +115,8 @@ cd /tmp/felucca-site && python3 -m http.server 8000
 # open http://localhost:8000/webapp/installer/
 ```
 
+[docs/quickstart-ru.md](docs/quickstart-ru.md) covers the same site in Russian, plus the GitHub Pages
+setup and the two failure modes that make a published installer come up empty.
+
 Installing firmware is at your own risk. If an install fails and the FM-1 no longer
 starts, recovery needs [FM-1-transporter](https://github.com/kurogedelic/FM-1-transporter).

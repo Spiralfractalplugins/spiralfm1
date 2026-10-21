@@ -44,10 +44,8 @@ hear, you play.
 
 <p align="center"><img src="assets/spiralfm1/spiralfm1-logo.svg" alt="The SPIRALFM1 mark" width="260"></p>
 
-The device photo below is from the Mycelium 1.0 build this firmware started from; the UI text and
+The device firmware is from the Mycelium 1.0 build this work started from; the UI text and
 splash on SPIRALFM1 read differently now.
-
-<p align="center"><img src="assets/screens/base-mycelium-1.0-display.jpg" alt="The 1.0 base build on a real FM-1" width="420"></p>
 
 More: [assets/screens/](assets/screens) (live pages, layers, the web editor).
 
@@ -111,6 +109,7 @@ identity is `FM-1_900`; provenance of every release: [meta/](meta).
 - [SPIRALFM1.md](SPIRALFM1.md) — what SPIRALFM1 adds, version by version ([Deutsch](docs/SPIRALFM1-de.md), [Русский](docs/SPIRALFM1-ru.md))
 - [docs/MANUAL.md](docs/MANUAL.md) — the full SLOOP base manual (every page, layer, sound, kit)
 - [docs/quickstart-fr.md](docs/quickstart-fr.md) — démarrage rapide en français
+- [docs/quickstart-ru.md](docs/quickstart-ru.md) — как запустить веб-установщик локально и на Pages (Русский)
 - [web/EDITOR_PROTOCOL.md](web/EDITOR_PROTOCOL.md) — the editor's SysEx protocol
 - [BUILDING.md](BUILDING.md) · [CHANGELOG.md](CHANGELOG.md) · [LICENSING.md](LICENSING.md)
 

@@ -38,7 +38,7 @@ set, `meta/` the provenance of each release, `BUILDING.md` how to build it.
 | Web editor | `web/editor.html` | the SysEx editor, ja/en |
 | **Studio** | `web/studio/` | the firmware's DSP in the browser, as WebAssembly — see below |
 | Site | `web/make_site.py` → `site/` | the Pages tree: installer, editor, studio, the package |
-| Host tests | `tests/` → `sh tests/run_tests.sh` | the firmware's C tests, the web suite, the studio wasm test, the studio worklet test |
+| Host tests | `tests/` → `sh tests/run_tests.sh` | the firmware's C tests, the web suite, the studio wasm test, the studio worklet test, the studio dom test |
 
 ### The Studio — the browser engine
 
@@ -62,16 +62,21 @@ the device reads.
 - The audio thread is tested too: `tests/studio_worklet_test.mjs` runs `web/studio/worklet.js`
   under node with a fake `AudioWorkletProcessor`, because the host test calls `st_render()` itself
   and therefore cannot see a bug in the worklet's resampling.
+- The page's controls are tested in a real browser: `tests/studio_dom_test.mjs` serves the page
+  and the engine, drives a headless Chrome over the DevTools protocol and looks at the DOM the
+  visitor sees (every value readable, a redraw replaces the rows instead of adding them). It
+  skips itself when there is no browser; GitHub's runners have one, so CI really runs it.
 
 ### Commands
 
 ```sh
 ./build.sh                                             # device firmware -> build/felucca.fwsc
 python3 tools/build_studio.py                          # browser engine -> build/studio/
-sh tests/run_tests.sh                                  # every host test + web suite + studio wasm/worklet tests
+sh tests/run_tests.sh                                  # every host test + web suite + studio wasm/worklet/dom tests
 node web/test_web.mjs                                  # the web suite alone
 node tests/studio_wasm_test.mjs                        # the studio engine alone
 node tests/studio_worklet_test.mjs                     # the worklet alone (the audio thread in node)
+node tests/studio_dom_test.mjs                         # the page alone (a headless browser, the DOM)
 python3 web/make_site.py build/felucca.fwsc 1.0 site   # the Pages tree -> site/
 python3 -m http.server 8765 --directory site            # serve it locally
 ```
@@ -91,6 +96,50 @@ python3 -m http.server 8765 --directory site            # serve it locally
 ---
 
 ## Session log
+
+### 2026-10-21 — Studio: the parameter values are visible again, the rows stop multiplying
+
+- **Task.** The user reported two things on the live Studio: the parameter values were not visible
+  in the web interface's drop-downs, and the controls multiplied — a new row appeared on every
+  choice. Both were real bugs; the second one was invisible to every test that existed.
+- **Agents.** Main agent only.
+- **Actions.**
+  - `web/studio/engine.c` — two new exports: `st_param_is_enum(t, id)` and `st_global_is_enum(id)`
+    (the firmware's own rule: the format is `F_ENUM` — `editor.c` ED_PARAM_GET, `icons.c`
+    param_icon). Not "does it have names": the LOFI engine's `WAV#` / `DCY` are `F_INT` **with** a
+    name table (`eng_lofi.c`), and the device shows them as a value.
+  - `web/studio/index.html` — `paramCtl()` / `globalCtl()` ask the engine instead of testing a name
+    *pointer* for truthiness; `refresh()` now clears each `[data-p]` block before it draws the rows.
+  - `tests/studio_dom_test.mjs` (new) — the page in a headless Chrome over the DevTools protocol:
+    every option is named, every drop-down and every slider shows its value, the rows do not grow.
+    Takes `STUDIO_DIR`, skips itself when there is no browser.
+  - `tests/studio_wasm_test.mjs` — the engine's enum answers (11 lists, 21 values, the globals, the
+    drum kit, and the two LOFI parameters that have names but are values); the id map is now all of
+    the engine's ids.
+  - `web/test_web.mjs` — the page asks the engine (not a pointer) and a redraw replaces the rows.
+  - `tests/run_tests.sh` — runs the dom test next to the wasm and the worklet test.
+- **Verification.**
+  - `python3 tools/build_studio.py` → `engine.wasm: 159,443 B` (was 159,147 B).
+  - `node tests/studio_dom_test.mjs` → *studio dom: ok*: 18 drop-downs (was 70), 45 rows, no blank
+    option, no blank value; the rows stay `8,4,8,1,1,5,6,5,3,4` through a choice, an engine change,
+    a track change and the drum track. **Checked against the old page: it fails there** — 70
+    drop-downs with blank options and the rows `8 → 16 → 24 → 32 → 40` — so it is a real
+    regression test.
+  - The same test with the *old* `engine.wasm` (the browser may still have it cached) → *ok*: the
+    page falls back to "a parameter is a list if every value in its range has a name".
+  - `node tests/studio_wasm_test.mjs` → *studio wasm: ok*; `node web/test_web.mjs` → *web tests
+    passed*; `sh tests/run_tests.sh` → *ALL HOST TESTS PASSED*.
+  - CI run `39570191624` → *success*, with *studio dom: ok* on the runner (it has Chrome); Pages
+    run `39570191629` → *success*. The second push (`a8c8d48`, the cached-engine fallback): CI
+    `39570811203` → *success*, Pages `39570811354` → *success*.
+  - The live page (headless Chrome against the live URL): 18 drop-downs, 0 blank options, 0 blank
+    values, 0 sliders without a value; the rows stay `8,4,8,1,1,5,6,5,3,4` through a choice, a
+    track change and an engine change.
+- **Lesson.** A pointer is not a boolean: `st_param_name()` returns an address, and the address of
+  an empty string is not 0. Every parameter therefore became a drop-down, and the options of the
+  ones that are not lists were blank. Ask the engine *what the parameter is* (its format), not
+  whether a string happens to be there. And a redraw that appends must clear first — the rows grew
+  because only the macro block was emptied.
 
 ### 2026-10-21 — Push: the studio goes live, and the workflows learn to speak YAML
 

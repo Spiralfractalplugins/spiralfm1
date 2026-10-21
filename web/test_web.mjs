@@ -9,6 +9,8 @@
 //   and the user-sample pipeline byte for byte against tools/sampleio.py
 // - fm1pkg.js: productOf and logicalImage on build/felucca.fwsc (skipped without a build)
 // - fm1ota.js: a full install and an unplug during the write against a simulated FM-1
+// - studio/: the page (its calls, ids and strings) and build/studio/engine.wasm rendering the sampled
+//   material - the same checks as tests/studio_wasm_test.mjs, from the web side
 
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
@@ -825,6 +827,102 @@ async function updater() {
   ok(e6 && /official FM-1 V15/.test(e6.message), "fm1pkg.js: only the exact official V15 is accepted (SHA-256)");
 }
 
+/* ------------------------------------------------------ /webapp/studio/ --- */
+function studio() {
+  const dir = join(HERE, "studio");
+  if (!existsSync(join(dir, "index.html"))) { console.log("studio: skipped (no web/studio)"); return; }
+  const page = readFileSync(join(dir, "index.html"), "utf8");
+  const worklet = readFileSync(join(dir, "worklet.js"), "utf8");
+  const js = page.split('<script type="module">')[1].split("</script>")[0];
+  let err = null;
+  try { new vm.Script(`(async () => {${js.replace(/import\.meta\.url/g, '"index.html"')}})`); } catch (e) { err = e.message; }
+  ok(!err, "studio: page script compiles" + (err ? ` (${err})` : ""));
+  ok(/registerProcessor\("spiralfm1-dsp"/.test(worklet) && /st_smp_ptr\(\)/.test(worklet) && /st_init\(\)/.test(worklet),
+    "studio: the worklet copies the samples, then starts the engine");
+  /* the page's own strings: every key in both languages */
+  const tb = js.slice(js.indexOf("const TEXT = {"), js.indexOf("\n};", js.indexOf("const TEXT = {")) + 2);
+  const TEXT = vm.runInNewContext(tb.replace("const TEXT =", "(") + ")");
+  const en = new Set(Object.keys(TEXT.en)), ru = new Set(Object.keys(TEXT.ru));
+  const used = new Set([...page.matchAll(/data-t="(\w+)"|\bt\("(\w+)"\)/g)].map((m) => m[1] || m[2]));
+  const miss = [...used].filter((k) => !en.has(k) || !ru.has(k));
+  const odd = [...en].filter((k) => !ru.has(k)).concat([...ru].filter((k) => !en.has(k)));
+  ok(!miss.length && !odd.length, `studio: every string in en and ru (${used.size} used${miss.length ? ", missing " + miss : ""}${odd.length ? ", one language only " + odd : ""})`);
+  ok(!/[A-Za-z]{4}[^"]*[а-я]/.test(TEXT.en.intro) && !/[A-Za-z]{6}\u043f/i.test(TEXT.ru.intro), "studio: no mixed-script typos in the strings");
+  /* nothing fetched but the engine, and no third-party code */
+  const urls = [...page.matchAll(/new URL\("([^"]+)"/g)].map((m) => m[1]);
+  ok(urls.join() === "engine.wasm,samples.bin,worklet.js" && !/src="http|import .* from "|cdn\./i.test(page),
+    `studio: only its own files (${urls.join(" ")})`);
+  const wasm = join(HERE, "../build/studio/engine.wasm"), bin = join(HERE, "../build/studio/samples.bin");
+  if (!existsSync(wasm) || !existsSync(bin)) { console.log("studio: engine.wasm not built, the wasm checks skipped"); return; }
+  const x = new WebAssembly.Instance(new WebAssembly.Module(readFileSync(wasm)), {});
+  const E = x.exports, dec = new TextDecoder();
+  new Uint8Array(E.memory.buffer, E.st_smp_ptr(), E.st_smp_size()).set(readFileSync(bin));
+  const cstr = (p) => { const b = new Uint8Array(E.memory.buffer); let e = p; while (b[e]) e++; return dec.decode(b.subarray(p, e)); };
+  const used_fns = new Set([...(page + worklet).matchAll(/\bst_[a-z0-9_]+/g)].map((m) => m[0]));
+  const nofn = [...used_fns].filter((f) => typeof E[f] !== "function");
+  ok(!nofn.length, `studio: every call the page makes is exported (${used_fns.size}${nofn.length ? ", missing " + nofn : ""})`);
+  /* the ids the page's data-p / data-g attributes name */
+  const IDS = {};
+  for (let k = 0; k < E.st_id_count(); k++) IDS[cstr(E.st_id_name(k))] = E.st_id(k);
+  const ids = new Set([...page.matchAll(/data-[pg]="([^"]+)"/g)].flatMap((m) => m[1].split(" ")));
+  for (const m of page.matchAll(/ID\.([PG]_[A-Z0-9_]+)/g)) ids.add(m[1]);
+  const noids = [...ids].filter((n) => !(n in IDS));
+  ok(!noids.length, `studio: every parameter the page shows exists (${ids.size}${noids.length ? ", missing " + noids : ""})`);
+  E.st_init();
+  ok(E.st_ready() === 1 && E.st_block() === 32, "studio: the engine boots in the wasm");
+  /* samples.bin is the blob the firmware embeds, so the studio's SAMPLE/GRAIN/kits are the device's */
+  const hdr = join(HERE, "../build/gen/felucca_samples.h");
+  const size = existsSync(hdr) ? +(/static const uint8_t SMP_DATA\[(\d+)\]/.exec(readFileSync(hdr, "utf8")) || [])[1] : 0;
+  ok(readFileSync(bin).length === E.st_smp_size() && (!size || size === E.st_smp_size()),
+    `studio: samples.bin is the firmware's SMP_DATA (${E.st_smp_size()} B)`);
+  const sets = [...Array(E.st_smp_sets()).keys()].map((i) => cstr(E.st_smp_set_name(i)));
+  const kits = [...Array(E.st_kits()).keys()].map((i) => cstr(E.st_kit_name(i)));
+  const eng = [...Array(E.st_engines()).keys()].map((i) => cstr(E.st_engine_name(i)));
+  ok(eng.includes("SAMPLE") && eng.includes("GRAIN") && sets.includes("PIANO") &&
+    ["PSY KICK", "FOREST", "HITECH"].every((k) => kits.includes(k)),
+    `studio: SAMPLE/GRAIN and the SPIRALFM1 kits (${eng.length} engines, ${sets.length} sets, ${kits.length} kits)`);
+  /* the drum kit the page selects is the engine's own parameter, and its name comes back from the wasm */
+  const kit = kits.indexOf("PSY KICK");
+  E.st_param(3, IDS.P_E0, kit);
+  ok(E.st_param_get(3, IDS.P_E0) === kit && cstr(E.st_param_name(3, IDS.P_E0, kit)) === "PSY KICK",
+    "studio: the page sets and reads the kit through P_E0");
+  /* the grid the page edits: notes for a part, lanes for the drum track */
+  E.st_steps_clear(3);
+  E.st_lane_toggle(0, 0);
+  E.st_steps_clear(0);
+  E.st_step_toggle(0, 4, 60);
+  ok(E.st_lane_get(0, 0) === 1 && E.st_step_has(0, 4, 60) === 1 && E.st_step_toggle(0, 4, 60) === 0 && E.st_step_has(0, 4, 60) === 0,
+    "studio: the step and lane grid writes and erases");
+  /* sound out of the wasm: the factory groove, then the sampled material */
+  const render = (n) => { const out = new Int16Array(n * E.st_block() * 2);
+    for (let b = 0; b < n; b++) { const i32 = new Int32Array(E.memory.buffer, E.st_render(), E.st_block() * 2);
+      for (let k = 0; k < i32.length; k++) out[b * i32.length + k] = Math.max(-32768, Math.min(32767, i32[k])); }
+    return out; };
+  const rms = (f) => { let s = 0; for (const v of f) s += v * v; return Math.round(Math.sqrt(s / f.length)); };
+  E.st_play(1);
+  ok(rms(render(3500)) > 200, "studio: the factory groove sounds out of the wasm");
+  E.st_play(0);
+  render(200);
+  E.st_select(3);
+  for (const k of ["PSY KICK", "FOREST", "HITECH"]) {
+    E.st_param(3, IDS.P_E0, kits.indexOf(k));
+    E.st_keys(1);
+    const v = rms(render(3000));
+    E.st_keys(0);
+    render(600);
+    ok(v > 200, `studio: ${k} sounds (${v} rms)`);
+  }
+  const SAMPLE = eng.indexOf("SAMPLE");
+  E.st_select(0);
+  E.st_track_engine(0, SAMPLE);
+  E.st_param(0, IDS.P_SLEN, 1);
+  E.st_param(0, IDS.P_E0, 0);
+  E.st_keys(1 << 12);
+  const sv = rms(render(4000));
+  E.st_keys(0);
+  ok(sv > 100, `studio: the SAMPLE engine decodes the blob (${sv} rms)`);
+}
+
 await editorMock();
 await editorLibrarian();
 await editorLive();
@@ -837,6 +935,7 @@ editorTabs();
 editorIcons();
 samplesMatch();
 chopTests();
+studio();
 await packages();
 await updater();
 console.log(failed ? `WEB TESTS FAILED (${failed})` : "web tests passed");

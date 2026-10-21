@@ -1,5 +1,6 @@
 # Build outputs
 build/
+site/
 
 # macOS
 .DS_Store
@@ -11,3 +12,5 @@ __pycache__/
 
 # Node
 node_modules/
+
+.qoder/settings.local.json

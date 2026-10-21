@@ -1,0 +1,174 @@
+# AGENTS.md — the agent log for this repository
+
+A running record of what the agents did here: the task, the agents involved, the files that
+changed, the commands that were run and what those commands printed. It exists so that a fresh
+agent — or a human coming back after a month — can pick the work up without re-deriving it.
+
+**How to use it.** Read `## Current state` first: it says what works right now and how to build
+and test it. Then scroll to `## Session log` for the history. When a run changes anything in this
+repository, append an entry (newest first) and refresh the `## Current state` block.
+
+**Rules for the entries**
+
+- One entry per run, newest first: `### YYYY-MM-DD — what the run was about`.
+- Name every file that was created, changed or deleted, with one line on what changed in it.
+- Every "it works" claim needs the command that proves it and the result it printed.
+- Record the agents that did the work: the main agent and any subagents, and what each did.
+- No secrets, no tokens, no private URLs. Keep it a log, not a diary.
+
+---
+
+## Current state
+
+*Updated 2026-10-21.*
+
+### What this repository is
+
+SPIRALFM1 — the firmware for the M-VAVE FM-1 groovebox: an independent build on top of Felucca
+and Mycelium by Leo Kuroshita (Hügelton Instruments). Here live the firmware sources, the tools
+that build and flash it, the web pages, and the host tests. `SPIRALFM1.md` describes the feature
+set, `meta/` the provenance of each release, `BUILDING.md` how to build it.
+
+### What is built and working
+
+| Piece | Where | State |
+| --- | --- | --- |
+| Device firmware | `firmware/src/` → `./build.sh` → `build/felucca.fwsc` | builds (Docker on macOS, native on Linux CI) |
+| Web installer | `web/index_pkg.html` + `web/fm1pkg.js`, `web/fm1ota.js` | Web MIDI installer for the FM-1, ja/en |
+| Web editor | `web/editor.html` | the SysEx editor, ja/en |
+| **Studio** | `web/studio/` | the firmware's DSP in the browser, as WebAssembly — see below |
+| Site | `web/make_site.py` → `site/` | the Pages tree: installer, editor, studio, the package |
+| Host tests | `tests/` → `sh tests/run_tests.sh` | the firmware's C tests, the web suite, the studio wasm test, the studio worklet test |
+
+### The Studio — the browser engine
+
+The point of the Studio is that the page plays **the firmware's own code**, not a
+re-implementation. `web/studio/engine.c` includes `firmware/src/{core,engines,drums,params,voice,
+slicer,fx,usb,midi_uart,seq}.c` and exports a small `st_*` API; `web/studio/worklet.js` runs that
+engine in an AudioWorklet; the page (`web/studio/index.html`, en/ru) reads the firmware's own
+tables — the same track table, the same params, the same punch-in names — so a knob reads what
+the device reads.
+
+- Build: `python3 tools/build_studio.py` → `build/studio/engine.wasm` (159 KB) +
+  `build/studio/samples.bin` (335 KB). macOS has no wasm-ld, so the script runs a debian
+  container (`tools/Dockerfile.studio`); on Linux CI it uses the apt `clang` + `lld`.
+- The samples are deliberately **not** inside the wasm: `tools/gen_samples.py` writes the same
+  ADPCM blob the flash holds into `samples.bin`, and the worklet copies it into linear memory
+  before `st_init` (GRAIN builds its seek index at startup, so it must be there first).
+- The page fetches only `engine.wasm`, `samples.bin` and `worklet.js`. No third-party code, no CDN,
+  no network access beyond its own directory.
+- The page's punch-in mapping is `firmware/src/punch.c`'s `punch_key()`; the key→note mapping is
+  `seq.c`'s (F3 + key, quantised).
+- The audio thread is tested too: `tests/studio_worklet_test.mjs` runs `web/studio/worklet.js`
+  under node with a fake `AudioWorkletProcessor`, because the host test calls `st_render()` itself
+  and therefore cannot see a bug in the worklet's resampling.
+
+### Commands
+
+```sh
+./build.sh                                             # device firmware -> build/felucca.fwsc
+python3 tools/build_studio.py                          # browser engine -> build/studio/
+sh tests/run_tests.sh                                  # every host test + web suite + studio wasm/worklet tests
+node web/test_web.mjs                                  # the web suite alone
+node tests/studio_wasm_test.mjs                        # the studio engine alone
+node tests/studio_worklet_test.mjs                     # the worklet alone (the audio thread in node)
+python3 web/make_site.py build/felucca.fwsc 1.0 site   # the Pages tree -> site/
+python3 -m http.server 8765 --directory site            # serve it locally
+```
+
+### Open items
+
+- **Nothing is pushed.** The Studio work is local only: no commit, no push, no Pages deploy (the
+  user asked for that explicitly for this session).
+- `site/` is a build output and is now in `.gitignore`; it must never be committed.
+- The Studio has no MIDI output, no project save/load and no preset export (only the language
+  choice is kept in `localStorage`). It is a player and a sequence editor, not a replacement for
+  `web/editor.html`.
+- `web/studio/` ships the engine's *own* API; if the firmware's tables change, the page's
+  `data-p` / `data-g` attribute names must be checked against `st_id_name()`.
+
+---
+
+## Session log
+
+### 2026-10-21 — Studio: the browser check caught a silent engine
+
+- **Task.** Verify the studio in a real browser, then make it discoverable (installer link,
+  README), keep the build output out of git, and start this log.
+- **Agents.** Main agent only (opencode, `minimax-m3.1-flash-free`); no subagents — the work was
+  linear and small, so it was done directly instead of delegated.
+- **Actions.**
+  - `web/studio/worklet.js` (fixed) — **the engine was silent in the browser.** The resampler
+    decremented its fractional position but never incremented it, so the worklet rendered exactly
+    one 32-frame block and then stopped: the transport request was never consumed, `song.playing`
+    stayed 0 and the page sat on "PLAY" for ever. Now `this.position += this.ratio` per frame
+    (`ratio = st_rate() / sampleRate`), so the engine's samples are consumed at the engine's own
+    rate and the context's rate is resampled, not stretched.
+  - `tests/studio_worklet_test.mjs` (new) — the worklet under node: the file is loaded untouched,
+    a fake `AudioWorkletProcessor` and a fake `registerProcessor` catch it, and blocks of 128
+    frames are played through it. It proves that the transport starts, that the groove comes out,
+    that the sequencer moves, that STOP stops, and that 48 kHz resampling works.
+  - `tests/run_tests.sh` (changed) — runs the worklet test next to the studio wasm test.
+  - `AGENTS.md` (new) — this file: the current state and the session log.
+  - `.gitignore` — added `site/` under the build outputs (the `web/make_site.py` output was
+    showing up as untracked noise).
+  - `web/index_pkg.html` — added a "Studio" link next to the Editor link, plus the `studio:` text
+    in the ja and en dictionaries; `.ed + .ed { margin-left: 8px; }` so the two buttons sit apart.
+  - `README.md` — new "Play it in the browser (Studio)" section: what it is, the Pages URL, how to
+    build it, and the note that the DSP is the firmware's own code.
+- **Verification.**
+  - `python3 tools/build_studio.py` → clean docker rebuild, `engine.wasm: 159,147 B`,
+    `samples.bin: 335,374 B` (byte-identical to the earlier build).
+  - `node web/test_web.mjs` → *web tests passed* (the studio section included).
+  - `node tests/studio_wasm_test.mjs` → *studio wasm: ok* (all 9 engines sound, the sample sets
+    are distinct, the pitch grid writes and erases, programmed steps play, a fresh boot is
+    reproducible; `build/studio/preview.wav` written).
+  - `node tests/studio_worklet_test.mjs` → *studio worklet: ok* (the groove's peak 0.31, the
+    sequencer moves, up to 4 voices at once, 44.1 kHz and 48 kHz). **Checked against the old
+    worklet: it fails there** (silent, transport never starts) — so it is a real regression test.
+  - `sh tests/run_tests.sh` → *ALL HOST TESTS PASSED*.
+  - `python3 web/make_site.py build/felucca.fwsc 1.0 site` → `webapp/studio` 537,890 B with all
+    four files.
+  - Headless Chromium over CDP (the check that found the bug): the installer page shows the
+    Studio link; the studio page boots, POWER starts the AudioWorklet (`Sound on · 44100 Hz`),
+    PLAY flips the button to STOP, the step bar runs through all 32 steps, the grid playhead
+    moves, the page shows "2 voices" — and **no console output and no exceptions on either page**.
+
+### 2026-10-21 — WebAssembly studio: the firmware's DSP in the browser
+
+- **Task.** Run the firmware in the browser: compile `firmware/src/` to WebAssembly and drive it
+  from a page, so SPIRALFM1 can be heard without an FM-1.
+- **Agents.** Main agent only; no subagents.
+- **Actions.**
+  - `web/studio/engine.c` (new) — one translation unit that includes the firmware's sources and
+    exports the `st_*` API the page needs (engine, presets, params, sequence, punch, drum grid,
+    sample zones). The firmware's tables are the page's tables.
+  - `web/studio/worklet.js` (new) — the AudioWorklet processor: instantiates the wasm, copies
+    `samples.bin` into linear memory, `st_init()`, renders 32-frame blocks and resamples them
+    linearly to the context rate; posts the live state (playing, the step of each track, the
+    voice count, the punch-in FX) to the page every ~50 ms.
+  - `web/studio/index.html` (new) — the page: 4 tracks, engine/preset selects, the 16 params,
+    the 27-key keyboard (QWERTY), the 27×32 step grid, the punch-in row, MIDI in, an
+    oscilloscope, en/ru.
+  - `tools/build_studio.py` (new) + `tools/Dockerfile.studio` (new) — the build: generate the
+    studio flavour of the samples, compile with `clang --target=wasm32`, link with `wasm-ld`.
+  - `tools/gen_samples.py` (changed) — a "studio" flavour: the same zones and the same ADPCM, but
+    `SMP_DATA` is empty in the header and the raw blob goes to `samples.bin`; a separate cache
+    (`build/gen_samples.studio.cache`).
+  - `web/make_site.py` (changed) — copies the studio into `site/webapp/studio/`, and says so
+    loudly when the engine has not been built.
+  - `web/test_web.mjs` (changed) — a studio section: the page's strings exist in en and ru, the
+    page fetches nothing but its own three files, the worklet copies the samples before `st_init`,
+    the wasm exports what the page calls, and `samples.bin` matches the firmware's blob.
+  - `tests/studio_wasm_test.mjs` (new) + `tests/run_tests.sh` (changed) — the deeper engine test,
+    run by the suite when `build/studio/engine.wasm` exists.
+  - `.github/workflows/ci.yml`, `.github/workflows/pages.yml` (changed) — install `clang` + `lld`,
+    build the studio before the site build.
+- **Verification.**
+  - `node web/test_web.mjs` → *web tests passed*.
+  - `node tests/studio_wasm_test.mjs` → *studio wasm: ok*.
+  - `python3 web/make_site.py …` → `site/webapp/studio/{engine.wasm, samples.bin, index.html,
+    worklet.js}`; all four served with the right MIME type.
+  - Headless Chromium over CDP: the page loads, the grid and the tabs render, POWER starts the
+    AudioWorklet (`Sound on · 44100 Hz`), no console errors, no uncaught exceptions.
+- **Outcome.** The firmware now runs in a browser tab. Open items are in `## Current state`.

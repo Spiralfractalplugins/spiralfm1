@@ -25,6 +25,8 @@ jobs:
       - run: pip install Pillow
       - name: SVG renderer (tools/gen_spiralfm1_logo.py calls rsvg-convert)
         run: sudo apt-get update && sudo apt-get install -y librsvg2-bin
+      - name: wasm toolchain (tools/build_studio.py: clang --target=wasm32, wasm-ld)
+        run: sudo apt-get install -y --no-install-recommends clang lld
 
       - name: JieLi toolchain and SDK files (cached)
         uses: actions/cache@v4
@@ -39,6 +41,8 @@ jobs:
 
       - name: Build
         run: ./build.sh
+      - name: Studio engine (WebAssembly for /webapp/studio/)
+        run: python3 tools/build_studio.py
       - name: Host tests
         run: sh tests/run_tests.sh
         env:

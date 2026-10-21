@@ -1,0 +1,684 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-only
+     Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments -->
+<!-- SPIRALFM1 Studio: SPIRALFM1's sound in the browser, without the FM-1. The firmware's own DSP
+     (web/studio/engine.c, built to engine.wasm by tools/build_studio.py) runs in an AudioWorklet
+     (worklet.js); the samples are the same ADPCM blob the flash holds (samples.bin).
+     Structure after Jangada Studio (Jangada, a Felucca fork by Leo Kuroshita / Hügelton Instruments);
+     the look, the engines, the kits and the sounds are SPIRALFM1's own. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SPIRALFM1 Studio</title>
+<style>
+  /* SPIRALFM1's mark colours (tools/gen_spiralfm1_svg.py): cyan, violet, lime, cream on near-black. */
+  :root { --bg: #f3f1e8; --fg: #14101a; --dim: #6d6674; --line: #cfc7d6; --surf: #e7e2d9;
+          --cyan: #0f8bab; --violet: #6b3fd4; --lime: #5c8a12; --hot: #0f8bab; --on: #fff; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #0a0a0e; --fg: #f3f1e8; --dim: #8a8394; --line: #2b2733;
+           --surf: #14121b; --cyan: #6ee7ff; --violet: #c59bff; --lime: #c8ff69; --hot: #6ee7ff; --on: #0a0a0e; }
+  }
+  :root[data-theme="dark"] { --bg: #0a0a0e; --fg: #f3f1e8; --dim: #8a8394; --line: #2b2733;
+         --surf: #14121b; --cyan: #6ee7ff; --violet: #c59bff; --lime: #c8ff69; --hot: #6ee7ff; --on: #0a0a0e; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font-variant-numeric: tabular-nums;
+         font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; }
+  main { max-width: 960px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 22px; font-weight: 800; letter-spacing: .04em; margin: 0 0 2px; display: flex; align-items: center; gap: 10px; }
+  h1 b { color: var(--cyan); font-weight: 800; }
+  h1 svg { width: 34px; height: 34px; flex: none; }
+  h2 { font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); margin: 0 0 10px; }
+  p { margin: 0 0 12px; }
+  a { color: inherit; }
+  .small { color: var(--dim); font-size: 13px; }
+  .lang, .theme { float: right; font: inherit; font-size: 13px; background: none; border: 0; color: var(--dim);
+                  text-decoration: underline; cursor: pointer; padding: 0; margin-left: 12px; }
+  button, select { font: inherit; font-size: 14px; color: var(--fg); background: var(--surf); border: 1px solid var(--line);
+                   padding: 5px 10px; cursor: pointer; border-radius: 0; }
+  button:hover { border-color: var(--cyan); }
+  button.on { background: var(--hot); color: var(--on); border-color: var(--hot); }
+  button.main { font-size: 15px; padding: 9px 22px; font-weight: 700; }
+  select { padding: 5px 6px; max-width: 100%; }
+  input[type=range] { width: 100%; margin: 0; accent-color: var(--cyan); }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr)); gap: 12px 16px; }
+  section { border-top: 1px solid var(--line); padding: 16px 0 12px; }
+  .ctl label { display: flex; justify-content: space-between; font-size: 11px; letter-spacing: .06em; color: var(--dim); }
+  .ctl label span:last-child { color: var(--fg); }
+  .ctl select, .ctl input { width: 100%; }
+  .tabs { display: flex; gap: 0; margin-bottom: 12px; }
+  .tabs button { flex: 1; text-align: left; padding: 7px 8px; border-right-width: 0; min-width: 0; }
+  .tabs button:last-child { border-right-width: 1px; }
+  .tabs button small { display: block; font-size: 11px; opacity: .75; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tabs button.on small { opacity: .9; }
+  .tabs button i { font-style: normal; float: right; font-size: 10px; opacity: .7; }
+  #steps, .seqrow { display: flex; flex-wrap: wrap; gap: 3px; }
+  #steps i { width: 15px; height: 15px; border: 1px solid var(--line); display: block; cursor: pointer; }
+  #steps i.note { background: var(--cyan); border-color: var(--cyan); }
+  #steps i.now { outline: 2px solid var(--lime); outline-offset: -1px; }
+  #grid { overflow-x: auto; }
+  #grid table { border-collapse: collapse; }
+  #grid th { font: 400 10px/1.4 ui-monospace, Menlo, monospace; color: var(--dim); text-align: right; padding: 0 4px 0 0; white-space: nowrap; }
+  #grid td { padding: 1px; }
+  #grid b { display: block; width: 15px; height: 13px; background: var(--surf); border: 1px solid var(--line); cursor: pointer; }
+  #grid b.on { background: var(--cyan); border-color: var(--cyan); }
+  #grid b.hard { background: var(--violet); border-color: var(--violet); }
+  #grid b.tie { background: none; border-color: var(--lime); border-top-width: 0; border-bottom-width: 0; }
+  #grid b.now { outline: 2px solid var(--lime); outline-offset: -1px; }
+  #grid b.beat { border-left-color: var(--fg); }
+  canvas#scope { width: 100%; height: 110px; display: block; background: var(--surf); color: var(--cyan); --scope-grid: var(--line); }
+  #kbd { position: relative; height: 140px; margin: 12px 0 8px; user-select: none; touch-action: none; }
+  #kbd div { position: absolute; top: 0; border: 1px solid var(--line); display: flex; align-items: flex-end;
+             justify-content: center; font-size: 11px; color: var(--dim); padding-bottom: 5px; cursor: pointer;
+             text-align: center; line-height: 1.1; overflow: hidden; }
+  #kbd .w { height: 100%; background: var(--bg); }
+  #kbd .b { height: 60%; background: var(--surf); color: var(--violet); z-index: 1; }
+  #kbd div.down { background: var(--lime); color: var(--on); border-color: var(--lime); }
+  #kbd.fx .w { color: var(--violet); font-weight: 700; }
+  #punch { display: flex; flex-wrap: wrap; gap: 4px; }
+  #punch button { font-size: 11px; padding: 3px 7px; }
+  #status { min-height: 1.5em; }
+  .lit { color: var(--lime); font-weight: 700; }
+  footer { margin-top: 24px; }
+  kbd { font: 12px ui-monospace, Menlo, monospace; border: 1px solid var(--line); padding: 0 4px; }
+  @media (max-width: 620px) { .tabs button small { display: none; } #kbd { height: 112px; } h1 { font-size: 18px; } }
+</style>
+</head>
+<body>
+<main>
+  <button class="lang" id="lang"></button><button class="theme" id="theme"></button>
+  <h1><span id="mark"></span>SPIRALFM1 <b>STUDIO</b></h1>
+  <p class="small" data-t="intro"></p>
+  <p class="row"><button class="main" id="demo" data-t="demo"></button>
+     <button id="power" data-t="power"></button> <span id="status" class="small"></span></p>
+
+  <section>
+    <div class="tabs" id="tabs"></div>
+    <div id="part">
+      <div class="row">
+        <select id="engine" style="min-width:120px"></select>
+        <button id="prev" aria-label="prev preset">&lsaquo;</button>
+        <select id="preset" style="flex:1;min-width:150px"></select>
+        <button id="next" aria-label="next preset">&rsaquo;</button>
+      </div>
+      <div class="grid" id="macro" style="margin-top:12px"></div>
+      <div class="row" id="sets" style="margin-top:10px"></div>
+    </div>
+    <div id="kitbox" hidden>
+      <div class="row">
+        <span class="small" data-t="kit"></span><select id="kit" style="min-width:150px"></select>
+        <button id="kickdemo" data-t="kickdemo"></button>
+      </div>
+    </div>
+  </section>
+
+  <section data-sec="edit" data-synth>
+    <h2 data-t="editTitle"></h2>
+    <div class="grid" data-p="P_E0 P_E1 P_E2 P_E3 P_E4 P_E5 P_E6 P_E7"></div>
+  </section>
+
+  <section data-sec="pattern">
+    <h2 data-t="seqTitle"></h2>
+    <div class="row">
+      <button class="main" id="play" data-t="play"></button>
+      <button id="stop2" data-t="panic"></button>
+      <div class="ctl" data-g="G_BPM" style="flex:1;min-width:150px"></div>
+      <div class="ctl" data-g="G_SWING" style="flex:1;min-width:130px"></div>
+    </div>
+    <div class="grid" style="margin:12px 0" data-p="P_SLEN P_SDIV P_SSWING P_SGATE"></div>
+    <div class="row"><button id="clear" data-t="clear"></button><button id="tie" data-t="tie"></button>
+      <span class="small" id="gridhow"></span></div>
+    <div id="steps" style="margin:10px 0 2px"></div>
+    <div id="grid"></div>
+  </section>
+
+  <section data-sec="sound" data-synth>
+    <h2 data-t="soundTitle"></h2>
+    <div class="grid" data-p="P_ATK P_DEC P_SUS P_REL P_ED_FLT P_ED_PIT P_ED_SHP P_ED_FX"></div>
+    <div class="grid" style="margin-top:12px">
+      <div class="ctl" data-p="P_LRATE"></div><div class="ctl" data-p="P_LWAVE"></div>
+    </div>
+  </section>
+
+  <section data-sec="voice" data-synth>
+    <h2 data-t="voiceTitle"></h2>
+    <div class="grid" data-p="P_VOICE P_GLIDE P_PAN P_LEVEL P_MUTE"></div>
+    <h2 style="margin-top:16px" data-t="arpTitle"></h2>
+    <div class="grid" data-p="P_AMODE P_ARATE P_AOCT P_AGATE P_APROB P_AHOLD"></div>
+    <h2 style="margin-top:16px" data-t="scaleTitle"></h2>
+    <div class="grid" data-p="P_ROOT P_SCALE P_QUANT P_CHORD P_TRANS"></div>
+  </section>
+
+  <section data-sec="slicer">
+    <h2 data-t="slicerTitle"></h2>
+    <div class="grid" data-p="P_SLCR P_SLRATE P_SLDEPTH"></div>
+  </section>
+
+  <section>
+    <h2 data-t="fxTitle"></h2>
+    <div class="grid" data-p="P_DIST P_CHOR P_DLY P_REV"></div>
+    <h2 style="margin-top:16px" data-t="masterTitle"></h2>
+    <div class="grid">
+      <div class="ctl" data-g="G_DUST"></div><div class="ctl" data-g="G_DUCK"></div>
+      <div class="ctl" data-g="G_FILT"></div><div class="ctl" data-g="G_ROUTE"></div>
+      <div class="ctl" data-g="G_ROLL"></div>
+      <div class="ctl" data-g="G_DRLVL"></div><div class="ctl" data-g="G_DRREV"></div>
+      <div class="ctl"><label><span data-t="volume"></span><span id="volv"></span></label>
+        <input type="range" id="vol" min="0" max="100" value="75"></div>
+    </div>
+    <h2 style="margin-top:16px" data-t="globalfx"></h2>
+    <div class="grid">
+      <div class="ctl" data-g="G_DTIME"></div><div class="ctl" data-g="G_DFDBK"></div>
+      <div class="ctl" data-g="G_DCOLOR"></div><div class="ctl" data-g="G_DMIX"></div>
+      <div class="ctl" data-g="G_RSIZE"></div><div class="ctl" data-g="G_RDAMP"></div>
+      <div class="ctl" data-g="G_CRATE"></div><div class="ctl" data-g="G_CDEPTH"></div>
+      <div class="ctl" data-g="G_CLOCK"></div><div class="ctl" data-g="G_TUNE"></div>
+    </div>
+    <canvas id="scope" style="margin-top:16px"></canvas>
+  </section>
+
+  <section>
+    <h2 data-t="keysTitle"></h2>
+    <div class="row">
+      <button id="octdn">OCT &minus;</button><span id="oct" class="small"></span><button id="octup">OCT +</button>
+      <button id="fx" data-t="fx"></button><span id="punchnow" class="lit"></span>
+      <span id="voices" class="small"></span>
+    </div>
+    <div id="kbd"></div>
+    <div id="punch"></div>
+    <p class="small" style="margin-top:10px" data-t="keysHelp"></p>
+    <p class="small" id="midi"></p>
+  </section>
+
+  <footer class="small">
+    <p data-t="about"></p>
+    <p data-t="samples"></p>
+    <p><span data-t="license"></span> <a href="https://github.com/spiralfractal/spralfm1" target="_blank" rel="noopener">github.com/spiralfractal/spralfm1</a>
+      &middot; <a href="../installer/" data-t="installer"></a> &middot; <a href="../editor/" data-t="editor"></a>
+      &middot; <a href="https://github.com/zednaked/jangada" target="_blank" rel="noopener" data-t="thanks"></a></p>
+  </footer>
+</main>
+<script type="module">
+/*TEXT-BEGIN*/
+const TEXT = {
+  en: {
+    intro: "SPIRALFM1's sound in the browser, without the FM-1: the firmware's own code (its nine engines, the sampled SPIRALFM1 kicks, the sequencer, the FX), compiled to WebAssembly, plus the very ADPCM samples the flash holds. Play it with the computer keyboard or a MIDI keyboard.",
+    power: "Start the sound", powerOff: "Stop the sound", starting: "Starting\u2026", running: "Sound on",
+    noaudio: "This browser has no Web Audio (AudioWorklet). Use a recent Chrome, Edge, Firefox or Safari.",
+    failed: "The sound did not start: ", engineFail: "The audio engine (engine.wasm / samples.bin) did not load.",
+    track: "Track", drumsTab: "DRUMS", kit: "KIT", kickdemo: "\u25b6 audition",
+    editTitle: "Sound", seqTitle: "Sequencer", soundTitle: "Envelope and LFO", voiceTitle: "Voice", arpTitle: "Arpeggiator",
+    scaleTitle: "Key", slicerTitle: "Slicer", fxTitle: "Sends", masterTitle: "Master",
+    globalfx: "Global delay, reverb and chorus", keysTitle: "Keys", play: "PLAY", stop: "STOP",
+    demo: "\u25b6 Hear the factory groove", clear: "CLEAR", tie: "TIE", panic: "ALL NOTES OFF",
+    volume: "VOLUME", fx: "PUNCH (Shift)",
+    gridSynth: "click a cell for a note, TIE to hold the previous one",
+    gridDrum: "click a cell for a kick; shift-click cycles its level",
+    keysHelp: "The FM-1's 27 keys: bottom row Z X C V B N M , . / (white) and S D F H J L ; (black); top row Q W E R T Y U I O (white) and 2 3 4 6 7 9 (black). \u2212 and = change the octave, Space is PLAY, Esc silences everything. Hold Shift (or PUNCH) and press a white key: a punch-in effect on the mix.",
+    voices: "voices", midiNone: "MIDI: no MIDI keyboard connected.", midiOn: "MIDI: playing the selected track from ",
+    midiNo: "MIDI: this browser has no WebMIDI.", midiDenied: "MIDI: access not allowed.",
+    about: "This Studio runs in your browser; nothing is sent anywhere. The audio is the firmware's own: the same C sources, the same fixed-point math, the same samples (the test compares the WebAssembly against the same code built for the host). The FM-1 is not needed.",
+    samples: "Samples: the SAMPLE sets are CC0 material (Versilian Studios VSCO-2 CE and VCSL, Sonic Pi), retuned and assembled by tools/gen_samples.py; the PSY KICK, FOREST and HITECH kits are SPIRALFM1's own material (assets/spiralfm1/samples). The blob the page loads is the one the flash holds.",
+    license: "GPL-3.0, no warranty. Source:", installer: "Installer", editor: "Editor",
+    thanks: "Page structure: Jangada Studio",
+  },
+  ru: {
+    intro: "\u0417\u0432\u0443\u043a SPIRALFM1 \u0432 \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0435 \u0431\u0435\u0437 FM-1: \u0442\u043e\u0442 \u0436\u0435 \u043a\u043e\u0434 \u043f\u0440\u043e\u0448\u0438\u0432\u043a\u0438 (\u0434\u0435\u0432\u044f\u0442\u044c \u0434\u0432\u0438\u0436\u043a\u043e\u0432, \u0441\u044d\u043c\u043f\u043b\u043e\u0432\u044b\u0435 \u0431\u043e\u0447\u043a\u0438 SPIRALFM1, \u0441\u0435\u043a\u0432\u0435\u043d\u0441\u043e\u0440, \u044d\u0444\u0444\u0435\u043a\u0442\u044b), \u0441\u043e\u0431\u0440\u0430\u043d\u043d\u044b\u0439 \u0432 WebAssembly, \u043f\u043b\u044e\u0441 \u0442\u043e\u0442 \u0436\u0435 ADPCM, \u0447\u0442\u043e \u043b\u0435\u0436\u0438\u0442 \u0432 \u043f\u0430\u043c\u044f\u0442\u0438. \u0418\u0433\u0440\u0430\u0439\u0442\u0435 \u043a\u043e\u043c\u043f\u044c\u044e\u0442\u0435\u0440\u043d\u043e\u0439 \u043a\u043b\u0430\u0432\u0438\u0430\u0442\u0443\u0440\u043e\u0439 \u0438\u043b\u0438 MIDI.",
+    power: "\u0412\u043a\u043b\u044e\u0447\u0438\u0442\u044c \u0437\u0432\u0443\u043a", powerOff: "\u0412\u044b\u043a\u043b\u044e\u0447\u0438\u0442\u044c", starting: "\u0417\u0430\u043f\u0443\u0441\u043a\u2026", running: "\u0417\u0432\u0443\u043a \u0432\u043a\u043b\u044e\u0447\u0451\u043d",
+    noaudio: "\u0412 \u044d\u0442\u043e\u043c \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0435 \u043d\u0435\u0442 Web Audio (AudioWorklet). \u041d\u043e\u0432\u044b\u0435 Chrome, Edge, Firefox \u0438\u043b\u0438 Safari.",
+    failed: "\u0417\u0432\u0443\u043a \u043d\u0435 \u0437\u0430\u043f\u0443\u0441\u0442\u0438\u043b\u0441\u044f: ", engineFail: "\u0410\u0443\u0434\u0438\u043e\u0434\u0432\u0438\u0436\u043e\u043a (engine.wasm / samples.bin) \u043d\u0435 \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u043b\u0441\u044f.",
+    track: "\u0414\u043e\u0440\u043e\u0436\u043a\u0430", drumsTab: "\u0411\u0410\u0420\u0410\u0411\u0410\u041d\u042b", kit: "\u041d\u0410\u0411\u041e\u0420", kickdemo: "\u25b6 \u043f\u0440\u043e\u0441\u043b\u0443\u0448\u0430\u0442\u044c",
+    editTitle: "\u0417\u0432\u0443\u043a", seqTitle: "\u0421\u0435\u043a\u0432\u0435\u043d\u0441\u043e\u0440", soundTitle: "\u041e\u0431\u043e\u043b\u043e\u0447\u043a\u0430 \u0438 \u041b\u0424\u041d", voiceTitle: "\u0413\u043e\u043b\u043e\u0441\u0430", arpTitle: "\u0410\u0440\u043f\u0435\u0434\u0436\u0438\u043e",
+    scaleTitle: "\u0422\u043e\u043d\u0430\u043b\u044c\u043d\u043e\u0441\u0442\u044c", slicerTitle: "\u0421\u043b\u0430\u0439\u0441\u0435\u0440", fxTitle: "\u041f\u043e\u0441\u044b\u043b\u044b", masterTitle: "\u041c\u0430\u0441\u0442\u0435\u0440",
+    globalfx: "\u041e\u0431\u0449\u0438\u0435 \u0434\u0438\u043b\u0435\u0439, \u0440\u0438\u0432\u0435\u0440\u0431 \u0438 \u0445\u043e\u0440\u0443\u0441", keysTitle: "\u041a\u043b\u0430\u0432\u0438\u0448\u0438", play: "\u041f\u0423\u0421\u041a", stop: "\u0421\u0422\u041e\u041f",
+    demo: "\u25b6 \u0417\u0430\u0432\u043e\u0434\u0441\u043a\u0438\u0439 \u0433\u0440\u0443\u0432", clear: "\u0421\u0422\u0415\u0420\u0415\u0422\u042c", tie: "\u0422\u0418\u0415", panic: "\u0412\u0421\u0415 \u041d\u041e\u0422\u042b \u0412\u042b\u041a\u041b.",
+    volume: "\u0413\u0420\u041e\u041c\u041a\u041e\u0421\u0422\u042c", fx: "PUNCH (Shift)",
+    gridSynth: "\u043a\u043b\u0438\u043a \u2014 \u043d\u043e\u0442\u0430, TIE \u2014 \u0443\u0434\u0435\u0440\u0436\u0430\u0442\u044c \u043f\u0440\u0435\u0434\u044b\u0434\u0443\u0449\u0443\u044e",
+    gridDrum: "\u043a\u043b\u0438\u043a \u2014 \u0443\u0434\u0430\u0440; shift-\u043a\u043b\u0438\u043a \u043c\u0435\u043d\u044f\u0435\u0442 \u0443\u0440\u043e\u0432\u0435\u043d\u044c",
+    keysHelp: "27 \u043a\u043b\u0430\u0432\u0438\u0448 FM-1: \u043d\u0438\u0436\u043d\u0438\u0439 \u0440\u044f\u0434 Z X C V B N M , . / (\u0431\u0435\u043b\u044b\u0435) \u0438 S D F H J L ; (\u0447\u0451\u0440\u043d\u044b\u0435); \u0432\u0435\u0440\u0445\u043d\u0438\u0439 \u0440\u044f\u0434 Q W E R T Y U I O (\u0431\u0435\u043b\u044b\u0435) \u0438 2 3 4 6 7 9 (\u0447\u0451\u0440\u043d\u044b\u0435). \u2212 \u0438 = \u2014 \u043e\u043a\u0442\u0430\u0432\u0430, \u041f\u0440\u043e\u0431\u0435\u043b \u2014 PLAY, Esc \u2014 \u0433\u043b\u0443\u0448\u0435\u043d\u0438\u0435. Shift (\u0438\u043b\u0438 PUNCH) + \u0431\u0435\u043b\u0430\u044f \u043a\u043b\u0430\u0432\u0438\u0448\u0430: punch-\u044d\u0444\u0444\u0435\u043a\u0442.",
+    voices: "\u0433\u043e\u043b\u043e\u0441\u043e\u0432", midiNone: "MIDI: \u043a\u043b\u0430\u0432\u0438\u0430\u0442\u0443\u0440\u0430 \u043d\u0435 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0430.", midiOn: "MIDI: \u0438\u0433\u0440\u0430\u0435\u0442 \u0432\u044b\u0431\u0440\u0430\u043d\u043d\u0443\u044e \u0434\u043e\u0440\u043e\u0436\u043a\u0443 \u0441 ",
+    midiNo: "MIDI: \u0432 \u044d\u0442\u043e\u043c \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0435 \u043d\u0435\u0442 WebMIDI.", midiDenied: "MIDI: \u0434\u043e\u0441\u0442\u0443\u043f \u043d\u0435 \u0440\u0430\u0437\u0440\u0435\u0448\u0451\u043d.",
+    about: "\u042d\u0442\u043e\u0442 Studio \u0440\u0430\u0431\u043e\u0442\u0430\u0435\u0442 \u0432 \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0435; \u043d\u0438\u0447\u0435\u0433\u043e \u043d\u0438\u043a\u0443\u0434\u0430 \u043d\u0435 \u043e\u0442\u043f\u0440\u0430\u0432\u043b\u044f\u0435\u0442\u0441\u044f. \u0417\u0432\u0443\u043a \u2014 \u043d\u0430\u0441\u0442\u043e\u044f\u0449\u0438\u0439 \u043a\u043e\u0434 \u043f\u0440\u043e\u0448\u0438\u0432\u043a\u0438: \u0442\u0435 \u0436\u0435 \u0438\u0441\u0442\u043e\u0447\u043d\u0438\u043a\u0438, \u0442\u0430 \u0436\u0435 \u0442\u043e\u0447\u043a\u0430 \u0441 \u0437\u0430\u043f\u044f\u0442\u043e\u0439, \u0442\u0435 \u0436\u0435 \u0441\u044d\u043c\u043f\u043b\u044b (\u0442\u0435\u0441\u0442 \u0441\u0440\u0430\u0432\u043d\u0438\u0432\u0430\u0435\u0442 WebAssembly \u0441 \u0442\u0435\u043c \u0436\u0435 \u043a\u043e\u0434\u043e\u043c, \u0441\u043e\u0431\u0440\u0430\u043d\u043d\u044b\u043c \u0434\u043b\u044f \u043a\u043e\u043c\u043f\u044c\u044e\u0442\u0435\u0440\u0430). FM-1 \u043d\u0435 \u043d\u0443\u0436\u0435\u043d.",
+    samples: "\u0421\u044d\u043c\u043f\u043b\u044b: \u043d\u0430\u0431\u043e\u0440\u044b SAMPLE \u2014 \u043c\u0430\u0442\u0435\u0440\u0438\u0430\u043b CC0 (Versilian Studios VSCO-2 CE \u0438 VCSL, Sonic Pi), \u043f\u0435\u0440\u0435\u0441\u0442\u0440\u043e\u0435\u043d\u043d\u044b\u0439 \u0438 \u0441\u043e\u0431\u0440\u0430\u043d\u043d\u044b\u0439 tools/gen_samples.py; \u043d\u0430\u0431\u043e\u0440\u044b PSY KICK, FOREST \u0438 HITECH \u2014 \u0441\u043e\u0431\u0441\u0442\u0432\u0435\u043d\u043d\u044b\u0439 \u043c\u0430\u0442\u0435\u0440\u0438\u0430\u043b SPIRALFM1 (assets/spiralfm1/samples). \u0411\u043b\u043e\u0431, \u043a\u043e\u0442\u043e\u0440\u044b\u0439 \u0433\u0440\u0443\u0437\u0438\u0442 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0430, \u2014 \u0442\u043e\u0442 \u0436\u0435, \u0447\u0442\u043e \u043b\u0435\u0436\u0438\u0442 \u0432 \u043f\u0430\u043c\u044f\u0442\u0438.",
+    license: "GPL-3.0, \u0431\u0435\u0437 \u0433\u0430\u0440\u0430\u043d\u0442\u0438\u0439. \u0418\u0441\u0445\u043e\u0434\u043d\u0438\u043a\u0438:", installer: "\u0423\u0441\u0442\u0430\u043d\u043e\u0432\u0449\u0438\u043a", editor: "\u0420\u0435\u0434\u0430\u043a\u0442\u043e\u0440",
+    thanks: "\u0421\u0442\u0440\u0443\u043a\u0442\u0443\u0440\u0430 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u044b: Jangada Studio",
+  },
+};
+/*TEXT-END*/
+const $ = (id) => document.getElementById(id);
+let lang = (navigator.language || "en").toLowerCase().startsWith("ru") ? "ru" : "en";
+try { const l = localStorage.getItem("spiralfm1-lang"); if (l && TEXT[l]) lang = l; } catch (e) { /* no storage */ }
+const t = (k) => TEXT[lang][k] || TEXT.en[k] || k;
+
+/* ---- the SPIRALFM1 mark, the same geometry as tools/gen_spiralfm1_svg.py */
+(function mark() {
+  const arm = (phase) => {
+    const steps = 144, t1 = 2.25 * 2 * Math.PI;
+    let d = "";
+    for (let i = 0; i <= steps; i++) {
+      const a = t1 * i / steps, r = 9 * Math.exp(Math.log(58 / 9) * Math.pow(a / t1, 1.15));
+      d += (i ? "L" : "M") + (80 + r * Math.cos(a + phase)).toFixed(1) + " " + (80 + r * Math.sin(a + phase)).toFixed(1);
+    }
+    return d;
+  };
+  $("mark").innerHTML = '<svg viewBox="0 0 160 160" fill="none" aria-label="SPIRALFM1">' +
+    '<circle cx="80" cy="80" r="68" stroke="var(--violet)" stroke-width="4" opacity=".45"/>' +
+    '<path d="M12 80A68 68 0 0 1 80 12" stroke="var(--cyan)" stroke-width="8" stroke-linecap="round"/>' +
+    '<path d="M148 80A68 68 0 0 1 80 148" stroke="var(--cyan)" stroke-width="8" stroke-linecap="round"/>' +
+    '<path d="' + arm(-Math.PI / 2) + '" stroke="var(--lime)" stroke-width="8" stroke-linecap="round"/>' +
+    '<path d="' + arm(Math.PI / 2) + '" stroke="var(--violet)" stroke-width="7" stroke-linecap="round" opacity=".9"/>' +
+    '<circle cx="80" cy="80" r="9" fill="var(--fg)"/></svg>';
+})();
+
+/* ---- the engine: an instance on this thread holds the state the page reads (it makes no sound);
+ * every call goes to it and to the worklet's instance, which plays. Calls made before the sound
+ * starts are logged and replayed into the worklet when it comes up. */
+let module = null, x = null, samples = null;
+try {
+  const [wb, sb] = await Promise.all([
+    fetch(new URL("engine.wasm", import.meta.url)).then((r) => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); }),
+    fetch(new URL("samples.bin", import.meta.url)).then((r) => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); }),
+  ]);
+  samples = new Uint8Array(sb);
+  module = await WebAssembly.compile(wb);
+  x = new WebAssembly.Instance(module, {}).exports;
+  new Uint8Array(x.memory.buffer, x.st_smp_ptr(), x.st_smp_size()).set(samples.subarray(0, x.st_smp_size()));
+  x.st_init();                                  /* the mirror needs the samples for the GRAIN names */
+} catch (e) { x = null; }
+const str = (p) => { if (!p) return ""; const b = new Uint8Array(x.memory.buffer); let e = p; while (b[e]) e++; return new TextDecoder().decode(b.subarray(p, e)); };
+const ID = {};
+if (x) for (let k = 0; k < x.st_id_count(); k++) ID[str(x.st_id_name(k))] = x.st_id(k);
+const TRANSIENT = new Set(["st_keys", "st_midi", "st_panic", "st_punch"]);
+const log = [];
+let node = null, ctx = null, gain = null, analyser = null, queue = [];
+function call(fn, ...args) {
+  if (!x) return;
+  x[fn](...args);
+  if (!TRANSIENT.has(fn)) log.push([fn, ...args]);
+  if (!node) return;
+  if (!queue.length) queueMicrotask(() => { const q = queue; queue = []; node?.port.postMessage(q); });
+  queue.push([fn, ...args]);
+}
+
+/* ---- audio */
+let live = { playing: 0, steps: [0, 0, 0, 0], voices: 0, punch: 4294967295 };
+async function power() {
+  if (ctx) {
+    if (ctx.state === "running") { call("st_panic"); await ctx.suspend(); } else await ctx.resume();
+    showPower(); return;
+  }
+  if (!x) { $("status").textContent = t("engineFail"); return; }
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx || !window.AudioWorkletNode) { $("status").textContent = t("noaudio"); return; }
+  $("status").textContent = t("starting");
+  try {
+    try { ctx = new Ctx({ sampleRate: 44100, latencyHint: "interactive" }); } catch (e) { ctx = new Ctx({ latencyHint: "interactive" }); }
+    await ctx.audioWorklet.addModule(new URL("worklet.js", import.meta.url));
+    node = new AudioWorkletNode(ctx, "spiralfm1-dsp",
+      { numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2], processorOptions: { module, samples } });
+    node.port.onmessage = ({ data }) => { live = data; showLive(); };
+    node.onprocessorerror = () => { if (gain) gain.gain.value = 0; $("status").textContent = t("failed") + "processor"; };
+    gain = ctx.createGain(); setVolume();
+    analyser = ctx.createAnalyser(); analyser.fftSize = 2048;
+    node.connect(gain).connect(ctx.destination); gain.connect(analyser);
+    node.port.postMessage([...log, ["st_keys", keysBits()]]);
+    await ctx.resume();
+    scope();
+    midiStart();
+  } catch (e) {
+    $("status").textContent = t("failed") + e.message;
+    ctx?.close(); ctx = node = null; return;
+  }
+  showPower();
+}
+function showPower() {
+  const on = ctx?.state === "running";
+  $("power").textContent = t(on ? "powerOff" : "power");
+  $("status").textContent = on ? `${t("running")} \u00b7 ${ctx.sampleRate} Hz` : (!x ? t("engineFail") : "");
+}
+const ensure = () => { if (!ctx || ctx.state !== "running") power(); };
+function setVolume() {
+  const v = +$("vol").value;
+  $("volv").textContent = v + "%";
+  if (gain && ctx) gain.gain.setTargetAtTime((v / 100) ** 2, ctx.currentTime, 0.02);
+}
+
+/* ---- controls: every label, range and value string comes from the firmware's tables */
+let sel = 0, tieMode = false;
+function ctlRange(box, label, min, max, get, set, text) {
+  box.innerHTML = "";
+  const l = document.createElement("label"), a = document.createElement("span"), b = document.createElement("span");
+  a.textContent = label; l.append(a, b);
+  const r = Object.assign(document.createElement("input"), { type: "range", min, max, value: get() });
+  r.oninput = () => { set(+r.value); b.textContent = text(); };
+  b.textContent = text();
+  box.append(l, r);
+}
+function ctlSelect(box, label, names, get, set) {
+  box.innerHTML = "";
+  const l = document.createElement("label"), a = document.createElement("span");
+  a.textContent = label; l.append(a);
+  const s = document.createElement("select");
+  for (const [v, n] of names) s.add(new Option(n, v));
+  s.value = get();
+  s.onchange = () => { set(+s.value); s.blur(); refresh(); };
+  box.append(l, s);
+}
+function paramCtl(box, track, id) {
+  const label = str(x.st_param_label(track, id)), min = x.st_param_min(track, id), max = x.st_param_max(track, id);
+  const get = () => x.st_param_get(track, id), text = () => str(x.st_param_text(track, id));
+  if (x.st_param_name(track, id, min)) {
+    const names = [];
+    for (let v = min; v <= max; v++) names.push([v, str(x.st_param_name(track, id, v))]);
+    ctlSelect(box, label, names, get, (v) => call("st_param", track, id, v));
+  } else ctlRange(box, label, min, max, get, (v) => call("st_param", track, id, v), text);
+}
+function globalCtl(box, id) {
+  const label = str(x.st_global_label(id)), min = x.st_global_min(id), max = x.st_global_max(id);
+  const get = () => x.st_global_get(id), text = () => str(x.st_global_text(id));
+  if (x.st_global_name(id, min)) {
+    const names = [];
+    for (let v = min; v <= max; v++) names.push([v, str(x.st_global_name(id, v))]);
+    ctlSelect(box, label, names, get, (v) => call("st_global", id, v));
+  } else ctlRange(box, label, min, max, get, (v) => call("st_global", id, v), text);
+}
+const NAME = ["C", "C\u266f", "D", "D\u266f", "E", "F", "F\u266f", "G", "G\u266f", "A", "A\u266f", "B"];
+const notename = (n) => NAME[n % 12] + (Math.floor(n / 12) - 1);
+const ST_TIE = 1, ST_REST = 2;                 /* core.h: the step's time */
+
+function tabs() {
+  const box = $("tabs"); box.innerHTML = "";
+  for (let i = 0; i < x.st_tracks(); i++) {
+    const b = document.createElement("button"), drum = !!x.st_is_drum(i);
+    const small = document.createElement("small");
+    if (drum) small.textContent = `${t("drumsTab")} \u00b7 ${str(x.st_param_name(i, ID.P_E0, x.st_param_get(i, ID.P_E0)))}`;
+    else small.textContent = `${str(x.st_engine_name(x.st_engine_of(i)))} \u00b7 ${str(x.st_preset_name(x.st_engine_of(i), x.st_preset_of(i)))}`;
+    const mute = document.createElement("i");
+    mute.textContent = x.st_param_get(i, ID.P_MUTE) ? "M" : "";
+    mute.title = str(x.st_param_label(i, ID.P_MUTE));
+    mute.onclick = (ev) => { ev.stopPropagation(); call("st_param", i, ID.P_MUTE, x.st_param_get(i, ID.P_MUTE) ? 0 : 1); refresh(); };
+    b.append(`${t("track")} ${i + 1}`, small, mute);
+    b.classList.toggle("on", i === sel);
+    b.onclick = () => { sel = i; call("st_select", i); refresh(); };
+    box.append(b);
+  }
+}
+function engines() {
+  const s = $("engine"); s.innerHTML = "";
+  for (let e = 0; e < x.st_engines(); e++) s.add(new Option(str(x.st_engine_name(e)), e));
+  s.value = x.st_engine_of(sel);
+}
+function presets() {
+  const e = x.st_engine_of(sel), s = $("preset"); s.innerHTML = "";
+  for (let p = 0; p < x.st_presets(e); p++) s.add(new Option(str(x.st_preset_name(e, p)), p));
+  s.value = x.st_preset_of(sel);
+}
+function stepPreset(d) {
+  const e = x.st_engine_of(sel), n = x.st_presets(e), p = (x.st_preset_of(sel) + d + n) % n;
+  call("st_track_preset", sel, p); refresh();
+}
+function sets() {                          /* the SAMPLE sets / GRAIN sources, as buttons */
+  const box = $("sets"), on = ["SAMPLE", "GRAIN"].includes(str(x.st_engine_name(x.st_engine_of(sel))));
+  box.hidden = !on; box.innerHTML = "";
+  if (!on) return;
+  for (let s = 0; s < x.st_smp_sets(); s++) {
+    const b = document.createElement("button");
+    b.textContent = str(x.st_smp_set_name(s));
+    b.classList.toggle("on", x.st_param_get(sel, ID.P_E0) === s);
+    b.onclick = () => { call("st_param", sel, ID.P_E0, s); refresh(); };
+    box.append(b);
+  }
+}
+
+/* ---- the grid: the drum track's 16 lanes, or 27 keys by 32 steps for a part */
+function grid() {
+  const box = $("grid"), steps = Math.min(x.st_param_get(sel, ID.P_SLEN), 64), drum = !!x.st_is_drum(sel);
+  $("gridhow").textContent = t(drum ? "gridDrum" : "gridSynth");
+  box.innerHTML = "";
+  const table = document.createElement("table"), tb = document.createElement("tbody");
+  table.append(tb);
+  const rows = drum ? [...Array(16).keys()] : [...Array(27).keys()].reverse();
+  for (const r of rows) {
+    const tr = document.createElement("tr"), th = document.createElement("th");
+    th.textContent = drum ? notename(x.st_lane_note(r)) : notename(53 + r);
+    if (drum && r % 4 === 0) th.style.color = "var(--fg)";
+    tr.append(th);
+    for (let i = 0; i < steps; i++) {
+      const td = document.createElement("td"), c = document.createElement("b");
+      if (drum) {
+        const lane = r, onv = x.st_lane_get(i, lane);
+        if (onv) c.classList.add("on");
+        if (x.st_lane_level(i, lane) === 3) c.classList.add("hard");
+        c.onclick = (ev) => {
+          if (ev.shiftKey && onv) call("st_lane_level_set", i, lane, (x.st_lane_level(i, lane) + 1) % 4);
+          else call("st_lane_toggle", i, lane);
+          grid();
+        };
+      } else {
+        const note = 53 + r;
+        if (x.st_step_time(sel, i) === ST_TIE) c.classList.add("tie");
+        else if (x.st_step_has(sel, i, note)) c.classList.add("on");
+        c.onclick = () => {
+          if (tieMode) call("st_step_tie", sel, i);
+          else call("st_step_toggle", sel, i, note);
+          grid();
+        };
+      }
+      if (i % 4 === 0) c.classList.add("beat");
+      if (live.playing && i === live.steps[sel]) c.classList.add("now");
+      td.append(c); tr.append(td);
+    }
+    tb.append(tr);
+  }
+  box.append(table);
+}
+function stepbar() {
+  const box = $("steps"), len = Math.min(x.st_param_get(sel, ID.P_SLEN), 64), drum = !!x.st_is_drum(sel);
+  if (box.children.length !== len) { box.innerHTML = ""; for (let i = 0; i < len; i++) box.append(document.createElement("i")); }
+  [...box.children].forEach((d, i) => {
+    const on = drum
+      ? [...Array(16).keys()].some((l) => x.st_lane_get(i, l))
+      : x.st_step_time(sel, i) !== ST_REST;
+    d.className = (live.playing && i === live.steps[sel] ? "now " : "") + (on ? "note" : "");
+  });
+}
+function showLive() {
+  if (!x) return;
+  $("play").textContent = t(live.playing ? "stop" : "play");
+  $("play").classList.toggle("on", !!live.playing);
+  $("demo").textContent = live.playing ? "\u25a0 " + t("stop").toLowerCase() : t("demo");
+  $("voices").textContent = live.playing ? `${live.voices} ${t("voices")}` : "";
+  $("punchnow").textContent = live.punch < x.st_punch_n() ? str(x.st_punch_name(live.punch)) : "";
+  [...$("punch").children].forEach((b, i) => b.classList.toggle("on", i === live.punch));
+  stepbar();
+  for (const c of $("grid").querySelectorAll("b.now")) c.classList.remove("now");
+  if (live.playing) for (const tr of $("grid").querySelectorAll("tr")) {
+    const td = tr.children[1 + (live.steps[sel] % Math.min(64, x.st_param_get(sel, ID.P_SLEN)))];
+    if (td) td.firstChild.classList.add("now");
+  }
+}
+
+/* ---- the keys: the FM-1's 27 (note 53 + k), by the physical key (event.code) */
+const CODES = ["KeyZ", "KeyS", "KeyX", "KeyD", "KeyC", "KeyF", "KeyV", "KeyB", "KeyH", "KeyN", "KeyJ", "KeyM",
+  "Comma", "KeyL", "Period", "Semicolon", "Slash"];                       /* k 0..16 (F3 .. A4) */
+const UPPER = ["KeyQ", "Digit2", "KeyW", "Digit3", "KeyE", "Digit4", "KeyR", "KeyT", "Digit6", "KeyY", "Digit7", "KeyU",
+  "KeyI", "Digit9", "KeyO"];                                              /* k 12..26 (F4 .. G5) */
+const KEY_OF = {};
+CODES.forEach((c, k) => (KEY_OF[c] = k));
+UPPER.forEach((c, i) => (KEY_OF[c] = 12 + i));
+const LABEL = Array.from({ length: 27 }, () => []);
+for (const [c, k] of Object.entries(KEY_OF)) LABEL[k].push(c.replace(/^Key|^Digit/, "").replace("Comma", ",").replace("Period", ".").replace("Semicolon", ";").replace("Slash", "/"));
+const BLACK = (k) => [1, 3, 5, 8, 10].includes((53 + k) % 12);
+const PUNCH_W = [0, -1, 1, -1, 2, -1, 3, 4, -1, 5, -1, 6];               /* punch.c: from F */
+const punch_key = (k) => (PUNCH_W[k % 12] < 0 ? -1 : Math.floor(k / 12) * 7 + PUNCH_W[k % 12]);
+const held = new Array(27).fill(0);
+let fxOn = false;
+function keysBits() { let b = 0; held.forEach((n, k) => { if (n > 0) b |= 1 << k; }); return b; }
+function sendKeys() {
+  call("st_keys", keysBits());
+  for (const d of $("kbd").children) d.classList.toggle("down", held[+d.dataset.k] > 0);
+}
+function press(k, d) {
+  if (d > 0 && fxOn) { const p = punch_key(k); if (p >= 0) { call("st_punch", p); live.punch = p; showLive(); return; } }
+  held[k] = Math.max(0, held[k] + d);
+  if (d > 0) ensure();
+  sendKeys();
+}
+function setFx(on) {
+  if (on === fxOn) return;
+  fxOn = on;
+  $("fx").classList.toggle("on", on);
+  $("kbd").classList.toggle("fx", on);
+  keyboard();
+}
+function keyboard() {
+  const box = $("kbd"); box.innerHTML = "";
+  const whites = [...Array(27).keys()].filter((k) => !BLACK(k)), w = 100 / whites.length;
+  for (let k = 0; k < 27; k++) {
+    const d = document.createElement("div"), wi = whites.filter((v) => v < k).length;
+    d.dataset.k = k;
+    if (BLACK(k)) { d.className = "b"; d.style.left = `${wi * w - w * 0.3}%`; d.style.width = `${w * 0.6}%`; }
+    else { d.className = "w"; d.style.left = `${wi * w}%`; d.style.width = `${w}%`; }
+    const p = fxOn && !BLACK(k) ? punch_key(k) : -1;
+    d.innerText = p >= 0 ? str(x.st_punch_name(p)) : LABEL[k].join(" ");
+    d.classList.toggle("down", held[k] > 0);
+    d.onpointerdown = (e) => { d.setPointerCapture(e.pointerId); d.dataset.p = 1; press(k, 1); };
+    d.onpointerup = d.onpointercancel = () => { if (d.dataset.p) { delete d.dataset.p; press(k, -1); } };
+    box.append(d);
+  }
+}
+const down = new Set();
+addEventListener("keydown", (e) => {
+  if (!x || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.target.matches("select, input:not([type=range]), textarea")) return;
+  if (e.key === "Shift") { setFx(true); return; }
+  if (e.code === "Space") { e.preventDefault(); if (!e.repeat) togglePlay(); return; }
+  if (e.code === "Escape") { call("st_panic"); return; }
+  if (e.code === "Minus" || e.code === "Equal") { octave(e.code === "Minus" ? -1 : 1); return; }
+  const k = KEY_OF[e.code];
+  if (k === undefined) return;
+  e.preventDefault();
+  if (e.repeat || down.has(e.code)) return;
+  down.add(e.code); press(k, 1);
+});
+addEventListener("keyup", (e) => {
+  if (e.key === "Shift") { setFx(false); return; }
+  if (down.delete(e.code)) press(KEY_OF[e.code], -1);
+});
+addEventListener("blur", () => { for (const c of down) press(KEY_OF[c], -1); down.clear(); setFx(false); });
+function octave(d) { call("st_octave", Math.max(-4, Math.min(4, x.st_octave_get() + d))); refresh(); }
+
+/* ---- MIDI in: notes and controllers to the selected track (any channel reaches it) */
+let midiAccess = null;
+async function midiStart() {
+  if (!navigator.requestMIDIAccess) { $("midi").textContent = t("midiNo"); return; }
+  try { midiAccess = await navigator.requestMIDIAccess(); } catch (e) { $("midi").textContent = t("midiDenied"); return; }
+  const hook = () => {
+    const names = [];
+    for (const i of midiAccess.inputs.values()) {
+      names.push(i.name);
+      i.onmidimessage = ({ data }) => {
+        const s = data[0] & 0xf0;
+        if (s >= 0x80 && s <= 0xe0 && s !== 0xc0) { if (s === 0x90 && data[2]) ensure(); call("st_midi", s | 0x0f, data[1], data[2]); }
+      };
+    }
+    $("midi").textContent = names.length ? t("midiOn") + names.join(", ") : t("midiNone");
+  };
+  midiAccess.onstatechange = hook; hook();
+}
+
+/* ---- the scope */
+function scope() {
+  const c = $("scope"), g = c.getContext("2d"), data = new Float32Array(2048);
+  const draw = () => {
+    const r = Math.min(devicePixelRatio || 1, 2), w = Math.round(c.clientWidth * r), h = Math.round(c.clientHeight * r);
+    if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
+    const st = getComputedStyle(c);
+    g.clearRect(0, 0, w, h);
+    g.strokeStyle = st.getPropertyValue("--scope-grid"); g.lineWidth = r; g.beginPath();
+    for (let i = 1; i < 8; i++) { g.moveTo((w * i) / 8, 0); g.lineTo((w * i) / 8, h); }
+    g.moveTo(0, h / 2); g.lineTo(w, h / 2); g.stroke();
+    data.fill(0);
+    if (ctx?.state === "running") analyser.getFloatTimeDomainData(data);
+    let s = 0;
+    for (let i = 1; i < 1024; i++) if (data[i - 1] <= 0 && data[i] > 0.002) { s = i; break; }
+    g.strokeStyle = st.color; g.lineWidth = 1.5 * r; g.beginPath();
+    for (let i = 0; i < 1024; i++) {
+      const X = (i * w) / 1023, Y = h / 2 - Math.max(-1, Math.min(1, data[s + i] * 1.5)) * h * 0.46;
+      i ? g.lineTo(X, Y) : g.moveTo(X, Y);
+    }
+    g.stroke();
+    requestAnimationFrame(draw);
+  };
+  draw();
+}
+
+/* ---- wiring */
+function refresh() {
+  if (!x) return;
+  const drum = !!x.st_is_drum(sel);
+  $("part").hidden = drum; $("kitbox").hidden = !drum;
+  for (const s of document.querySelectorAll("[data-synth]")) s.hidden = drum;
+  if (!drum) { engines(); presets(); }
+  else {
+    const k = $("kit"); k.innerHTML = "";
+    for (let i = 0; i < x.st_kits(); i++) k.add(new Option(str(x.st_kit_name(i)), i));
+    k.value = x.st_param_get(3, ID.P_E0);
+  }
+  const m = $("macro"); m.innerHTML = "";
+  if (!drum) for (let i = 0; i < 4; i++) { const d = document.createElement("div"); d.className = "ctl"; m.append(d); paramCtl(d, sel, x.st_macro(sel, i)); }
+  sets();
+  for (const box of document.querySelectorAll("[data-p]"))
+    for (const name of box.dataset.p.split(" ")) { const d = document.createElement("div"); d.className = "ctl"; box.append(d); paramCtl(d, sel, ID[name]); }
+  for (const box of document.querySelectorAll("[data-g]")) globalCtl(box, ID[box.dataset.g]);
+  $("oct").textContent = (x.st_octave_get() > 0 ? "+" : "") + x.st_octave_get();
+  $("tie").classList.toggle("on", tieMode);
+  tabs(); grid(); stepbar(); showLive();
+}
+function togglePlay() { ensure(); call("st_play", live.playing ? 0 : 1); live.playing ^= 1; showLive(); }
+function applyLang() {
+  document.documentElement.lang = lang;
+  for (const e of document.querySelectorAll("[data-t]")) e.textContent = t(e.dataset.t);
+  $("lang").textContent = lang === "ru" ? "English" : "\u0420\u0443\u0441\u0441\u043a\u0438\u0439";
+  showPower(); if (x) refresh();
+  if (midiAccess) midiAccess.onstatechange();
+}
+$("lang").onclick = () => { lang = lang === "ru" ? "en" : "ru"; try { localStorage.setItem("spiralfm1-lang", lang); } catch (e) { /* */ } applyLang(); };
+$("theme").onclick = () => {
+  const r = document.documentElement, dark = matchMedia("(prefers-color-scheme: dark)").matches;
+  const now = r.dataset.theme || (dark ? "dark" : "light");
+  r.dataset.theme = now === "dark" ? "light" : "dark";
+  $("theme").textContent = r.dataset.theme === "dark" ? "\u2600" : "\u263e";
+};
+$("power").onclick = power;
+$("play").onclick = togglePlay;
+$("demo").onclick = togglePlay;   /* the same PLAY, at the top: a visitor hears the groove in one click */
+$("stop2").onclick = () => call("st_panic");
+$("clear").onclick = () => { call("st_steps_clear", sel); grid(); stepbar(); };
+$("tie").onclick = () => { tieMode = !tieMode; $("tie").classList.toggle("on", tieMode); };
+$("engine").onchange = () => { const e = +$("engine").value; $("engine").blur(); if (e !== x.st_engine_of(sel)) call("st_track_engine", sel, e); refresh(); };
+$("preset").onchange = () => { call("st_track_preset", sel, +$("preset").value); $("preset").blur(); refresh(); };
+$("prev").onclick = () => stepPreset(-1);
+$("next").onclick = () => stepPreset(1);
+$("kit").onchange = () => { call("st_param", 3, ID.P_E0, +$("kit").value); $("kit").blur(); refresh(); };
+$("kickdemo").onclick = () => { ensure(); sel = 3; call("st_select", 3); call("st_keys", 1); setTimeout(() => call("st_keys", 0), 260); };
+$("vol").oninput = setVolume;
+$("octdn").onclick = () => octave(-1);
+$("octup").onclick = () => octave(1);
+$("fx").onpointerdown = () => setFx(!fxOn);
+if (x) {
+  const pb = $("punch");
+  for (let i = 0; i < x.st_punch_n(); i++) {
+    const b = document.createElement("button");
+    b.textContent = str(x.st_punch_name(i));
+    b.onclick = () => call("st_punch", i);
+    pb.append(b);
+  }
+  keyboard();
+}
+applyLang(); setVolume();
+if (!x) $("status").textContent = t("engineFail");
+</script>
+</body>
+</html>

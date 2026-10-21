@@ -77,6 +77,21 @@ python3 tools/fm1_install.py --info          # identity of the connected FM-1
 
 Windows: `tools/windows/INSTALL-SPIRALFM1.bat` builds in WSL and opens the installer locally.
 
+## Play it in the browser (Studio)
+
+The firmware's own code runs in the browser: the same nine engines, the sequencer, the punch-in
+FX and the ADPCM samples, compiled to WebAssembly. No FM-1, no USB.
+
+- [Open the Studio](https://spiralfractalplugins.github.io/spiralfm1/webapp/studio/) — play it with
+  the computer keyboard or a MIDI keyboard, edit the sequence in the page.
+- Build it: `python3 tools/build_studio.py` → `build/studio/engine.wasm` + `build/studio/samples.bin`
+  (clang with the wasm32 target and lld; the script uses a debian container on macOS).
+- Put it in the site: `python3 web/make_site.py build/felucca.fwsc 1.0 site` → `site/webapp/studio/`.
+
+The DSP is not a re-implementation: `firmware/src/` is compiled for wasm32 like `tests/hostsim.c`
+compiles it for the host, `web/studio/engine.c` is the bridge, and `web/studio/worklet.js` runs the
+engine in an AudioWorklet.
+
 ## Your first beat
 
 1. HOME hold → **GROOVES** → pick FOREST JAM → **OCT+** twice to confirm (transport stopped).

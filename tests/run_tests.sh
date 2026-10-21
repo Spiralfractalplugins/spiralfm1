@@ -103,6 +103,12 @@ run "installer CLI (fm1_install.py) against a simulated FM-1" python3 tests/inst
 
 if command -v node >/dev/null 2>&1; then
     run "web pages: editor protocol, samples, packages, update protocol" node web/test_web.mjs
+    if [ -e build/studio/engine.wasm ]; then
+        run "studio wasm: samples.bin, SAMPLE/GRAIN, the SPIRALFM1 kicks" node tests/studio_wasm_test.mjs
+        run "studio worklet: the engine in the audio thread (transport, resampling)" node tests/studio_worklet_test.mjs
+    else
+        echo "== skip studio wasm test (not built: python3 tools/build_studio.py)"
+    fi
 else
     echo "== skip web tests (no node)"
 fi

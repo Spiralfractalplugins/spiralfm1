@@ -7,6 +7,8 @@
   firmware/spiralfm1-VER.fwsc  the package
   webapp/installer/index.html index_pkg.html with fm1pkg.js, fm1ota.js and the metadata inlined
   webapp/editor/index.html    editor.html (+ fukiai.ttf, FUKIAI-LICENSE.txt)
+  webapp/studio/              studio/{index.html, worklet.js} + engine.wasm and samples.bin (build/studio,
+                              made by tools/build_studio.py; the page fetches them, so they stay separate files)
   src/                        not touched
 
   web/make_site.py build/felucca-X.Y.fwsc X.Y OUT_DIR [--beta]
@@ -34,6 +36,25 @@ def strip_module(src):
 def product_of(raw):
     """the package identity: one marker byte after each of the first 20 blocks (fm1pkg.js productOf)"""
     return "".join(chr((m - i - 1) & 0xFF) for i in range(BLOCKS) if (m := raw[i * BLK + KEEP]) != 0x7D)
+
+
+def studio(out):
+    """webapp/studio: SPIRALFM1's sound in the browser. engine.wasm and samples.bin are built by
+    tools/build_studio.py; the page fetches them as they are, so the ADPCM blob stays cacheable and
+    out of the wasm. Without them the page loads but has no sound, so say so. """
+    st = out / "webapp" / "studio"
+    st.mkdir(parents=True, exist_ok=True)
+    for f in ("index.html", "worklet.js"):
+        shutil.copy(HERE / "studio" / f, st / f)
+    total = (st / "index.html").stat().st_size
+    for f in ("engine.wasm", "samples.bin"):
+        src = HERE.parent / "build" / "studio" / f
+        if src.exists():
+            shutil.copy(src, st / f)
+            total += src.stat().st_size
+        else:
+            print(f"  studio: {f} is not built (python3 tools/build_studio.py): the page will have no sound")
+    return total
 
 
 def main(pkg, version, out):
@@ -82,7 +103,9 @@ def main(pkg, version, out):
         '<!doctype html><meta charset="utf-8"><title>SPIRALFM1</title>'
         '<meta http-equiv="refresh" content="0; url=webapp/installer/">'
         '<a href="webapp/installer/">SPIRALFM1 installer</a>\n', encoding="utf-8")
-    print(f"site: {out}: webapp/installer ({len(html)} B), webapp/editor, firmware/{name} ({len(raw)} B, {product})")
+    sb = studio(out)
+    print(f"site: {out}: webapp/installer ({len(html)} B), webapp/editor, webapp/studio ({sb} B), "
+          f"firmware/{name} ({len(raw)} B, {product})")
 
 
 if __name__ == "__main__":

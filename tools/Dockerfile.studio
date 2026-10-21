@@ -1,0 +1,7 @@
+# SPIRALFM1 Studio: the wasm32 toolchain for tools/build_studio.py (the pages workflow
+# installs the same two packages with apt). Build once, reuse: docker build -t ... this file.
+# SPDX-License-Identifier: GPL-3.0-only
+FROM debian:bookworm-slim
+RUN apt-get update -qq \
+ && apt-get install -y -qq --no-install-recommends clang lld python3 \
+ && rm -rf /var/lib/apt/lists/*

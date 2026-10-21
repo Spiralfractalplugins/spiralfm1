@@ -6,13 +6,13 @@ static arr_config_t arrangement;
 static arr_clock_t arrangement_clock;
 static uint8_t arrangement_enabled;
 /* Factory songs are procedural virtual scenes; user project slots stay intact. */
-static void (*my_song_apply)(uint32_t scene);
-static arr_config_t my_user_order;
-static uint8_t my_user_order_kept;
-static int my_song_active(void) { return my_song_apply && arrangement.reserved[0]==0x4du && arrangement.reserved[1]>=1u && arrangement.reserved[1]<=4u; }
-static void my_song_exit(void) {
-    if(my_song_active() && my_user_order_kept) arrangement=my_user_order;
-    my_user_order_kept=0; arrangement_enabled=0;
+static void (*sf_song_apply)(uint32_t scene);
+static arr_config_t sf_user_order;
+static uint8_t sf_user_order_kept;
+static int sf_song_active(void) { return sf_song_apply && arrangement.reserved[0]==0x4du && arrangement.reserved[1]>=1u && arrangement.reserved[1]<=4u; }
+static void sf_song_exit(void) {
+    if(sf_song_active() && sf_user_order_kept) arrangement=sf_user_order;
+    sf_user_order_kept=0; arrangement_enabled=0;
 }
 static uint32_t arrangement_ready(void);              /* project.c */
 static void arrangement_apply(uint32_t scene);         /* project.c */

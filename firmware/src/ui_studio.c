@@ -451,7 +451,7 @@ static void drum_screen_input(uint32_t pressed, uint32_t home)
             return;
         }
     }
-    if ((s = panel_enc(EN_PRESET))) mycelium_drum_step(s);
+    if ((s = panel_enc(EN_PRESET))) spiralfm1_drum_step(s);
     for (k = 0; k < 4u; k++) if ((s = panel_enc(EN_K1 + k))) {
         ui.hot_col = (uint8_t)k;
         ui.hot_t = 40;
@@ -474,7 +474,7 @@ static void drum_screen_input(uint32_t pressed, uint32_t home)
                 sync_reload = 1;
             }
         } else {
-            if (k == 0) mycelium_drum_step(s);
+            if (k == 0) spiralfm1_drum_step(s);
             if (k == 1) song.g[G_DRLVL] = (int16_t)clamp(song.g[G_DRLVL] + s, 0, 127);
             if (k == 2) song.g[G_DRREV] = (int16_t)clamp(song.g[G_DRREV] + s, 0, 127);
             if (k == 3) TDRUM->p[P_DIST] = (int16_t)clamp(TDRUM->p[P_DIST] + s, 0, 127);

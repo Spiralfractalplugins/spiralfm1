@@ -1,0 +1,9 @@
+{
+  "file": "FOREST-KICK.wav",
+  "role": "KICK",
+  "kit_name": "FOREST",
+  "sr": 44100,
+  "duration": 0.3,
+  "sha256": "35d4c4886db42662f0fd81ef7dc7481a1db326797a51379afe7cc6270811f627",
+  "source": "Original procedural synthesis: tools/gen_spiral_drums.py; no external audio input"
+}

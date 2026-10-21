@@ -4,7 +4,7 @@
 """Make the site (GitHub Pages):
 
   index.html                  redirect to the installer
-  firmware/mycelium-VER.fwsc  the package
+  firmware/spiralfm1-VER.fwsc  the package
   webapp/installer/index.html index_pkg.html with fm1pkg.js, fm1ota.js and the metadata inlined
   webapp/editor/index.html    editor.html (+ fukiai.ttf, FUKIAI-LICENSE.txt)
   src/                        not touched
@@ -41,21 +41,21 @@ def main(pkg, version, out):
     raw = pkg.read_bytes()
     product = product_of(raw)
     if not re.fullmatch(r"FM-1_9\d\d", product):
-        raise SystemExit(f"{pkg}: identity {product!r} is not a MYCELIUM package (FM-1_9xx)")
+        raise SystemExit(f"{pkg}: identity {product!r} is not a SPIRALFM1 package (FM-1_9xx)")
     if b"FELUCCA-LOADER-1" not in raw:              # marker of firmware/loader
-        raise SystemExit(f"{pkg}: no MYCELIUM update loader in it")
+        raise SystemExit(f"{pkg}: no SPIRALFM1 update loader in it")
     html = (HERE / "index_pkg.html").read_text(encoding="utf-8")
     lib = strip_module((HERE / "fm1pkg.js").read_text(encoding="utf-8")) + "\n" + \
         strip_module((HERE / "fm1ota.js").read_text(encoding="utf-8"))
-    name = f"mycelium-{re.sub(r'[^A-Za-z0-9.-]', '-', version)}.fwsc"
+    name = f"spiralfm1-{re.sub(r'[^A-Za-z0-9.-]', '-', version)}.fwsc"
     meta = json.dumps({"version": version, "product": product, "pkg": "../../firmware/" + name,
                        "sha256": hashlib.sha256(raw).hexdigest()})   # the page checks the download against it
     for mark in ("/*LIB*/", "/*META*/"):
         if html.count(mark) != 1:
             raise SystemExit(f"index_pkg.html must contain {mark} once; update make_site.py")
     html = html.replace("/*LIB*/", lib).replace("/*META*/", meta)
-    logo = HERE.parent / "assets" / "mycelium" / "mycelium-logo.svg"   # the MYCELIUM logo, inline
-    html = html.replace("<!--LOGO-->", logo.read_text(encoding="utf-8") if logo.exists() else "<b>MYCELIUM</b>")
+    logo = HERE.parent / "assets" / "spiralfm1" / "spiralfm1-logo.svg"   # the SPIRALFM1 logo, inline
+    html = html.replace("<!--LOGO-->", logo.read_text(encoding="utf-8") if logo.exists() else "<b>SPIRALFM1</b>")
     inst, ed, fw = out / "webapp" / "installer", out / "webapp" / "editor", out / "firmware"
     for d in (inst, ed, fw):
         d.mkdir(parents=True, exist_ok=True)
@@ -70,7 +70,7 @@ def main(pkg, version, out):
         notes = HERE / "beta_banner.html"
         banner = notes.read_text(encoding="utf-8") if notes.exists() else "<p><b>BETA</b></p>"
     html = html.replace("<!--BANNER-->", banner)
-    for old in list(fw.glob("felucca-*.fwsc")) + list(fw.glob("sloop-*.fwsc")) + list(fw.glob("mycelium-*.fwsc")):   # one package: the current one
+    for old in list(fw.glob("felucca-*.fwsc")) + list(fw.glob("sloop-*.fwsc")) + list(fw.glob("spiralfm1-*.fwsc")):   # one package: the current one
         old.unlink()
     (inst / "index.html").write_text(html, encoding="utf-8")
     shutil.copy(pkg, fw / name)
@@ -79,9 +79,9 @@ def main(pkg, version, out):
         if (HERE / f).exists():
             shutil.copy(HERE / f, ed / f)
     (out / "index.html").write_text(
-        '<!doctype html><meta charset="utf-8"><title>MYCELIUM</title>'
+        '<!doctype html><meta charset="utf-8"><title>SPIRALFM1</title>'
         '<meta http-equiv="refresh" content="0; url=webapp/installer/">'
-        '<a href="webapp/installer/">MYCELIUM installer</a>\n', encoding="utf-8")
+        '<a href="webapp/installer/">SPIRALFM1 installer</a>\n', encoding="utf-8")
     print(f"site: {out}: webapp/installer ({len(html)} B), webapp/editor, firmware/{name} ({len(raw)} B, {product})")
 
 

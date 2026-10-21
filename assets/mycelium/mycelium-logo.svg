@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 730 160" fill="none">
- <title>MYCELIUM – Myzel und Signal</title>
- <circle cx="80" cy="80" r="68" stroke="#c59bff" stroke-width="2" opacity=".45"/>
- <path d="M23 47A65 65 0 0 1 59 18M101 18A65 65 0 0 1 137 47" stroke="#c59bff" stroke-width="5" stroke-linecap="round"/>
- <path d="M35 76C38 51 58 36 80 36S122 51 125 76H106L96 63 80 86 64 63 54 76H35Z" stroke="#c8ff69" stroke-width="6" stroke-linejoin="round"/>
- <path d="M80 87V111M64 85V101L46 118M96 85V101L114 118M80 111L66 126M80 111L94 126" stroke="#c8ff69" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
- <circle cx="44" cy="120" r="5" fill="#c59bff"/><circle cx="65" cy="128" r="4" fill="#c8ff69"/><circle cx="95" cy="128" r="4" fill="#c8ff69"/><circle cx="116" cy="120" r="5" fill="#c59bff"/>
- <circle cx="80" cy="18" r="4" fill="#c8ff69"/>
-<text x="184" y="93" fill="#f3f1e8" font-family="Arial,Helvetica,sans-serif" font-size="70" font-weight="800" letter-spacing="7">MYCELIUM</text><text x="190" y="122" fill="#c59bff" font-family="Arial,Helvetica,sans-serif" font-size="14" letter-spacing="5">SOUND GROWS HERE · BY MANDALARS</text></svg>

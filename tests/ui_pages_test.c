@@ -53,8 +53,8 @@ static int project_used(uint32_t i) { return i < 2; }
 static void project_save(uint32_t i) { (void)i; saves++; ui_message("SAVED"); }
 static void project_load(uint32_t i) { (void)i; loads++; }
 static void arrangement_save(void) {}
-static uint32_t arrangement_ready(void) { return my_song_active()?15u:3u; }
-static void arrangement_apply(uint32_t s) { if(my_song_active())my_song_apply(s); }
+static uint32_t arrangement_ready(void) { return sf_song_active()?15u:3u; }
+static void arrangement_apply(uint32_t s) { if(sf_song_active())sf_song_apply(s); }
 static void song_backup(void) {}
 static void song_restore(void) {}
 static uint32_t sec_stores, sec_loads;
@@ -101,7 +101,7 @@ static void key(uint32_t k) { fm1_in.notes |= 1u << k; frame(); fm1_in.notes &= 
 static int fails;
 static void check(int ok, const char *what) { printf("ui: %-74s %s\n", what, ok ? "ok" : "FAIL"); fails += !ok; }
 
-#ifndef MYCELIUM_PREVIEW_ONLY
+#ifndef SPIRALFM1_PREVIEW_ONLY
 int main(int argc, char **argv)
 {
     uint32_t i;
@@ -292,7 +292,7 @@ int main(int argc, char **argv)
     release(B_SAVE);
     check(!on_song_page() && saves == 0, "SAVE held and let go: no song page, no save");
     tap(B_SAVE); check(ui.menu==6, "SAVE tapped on TRACKS: ready-made song banks");
-    my_song_sel=4;tap(B_OCTUP);check(on_song_page(),"USER SONG still opens the own section editor");
+    sf_song_sel=4;tap(B_OCTUP);check(on_song_page(),"USER SONG still opens the own section editor");
     ui.force = 1; frame(); ppm("page-song");
 
     /* ---- the drum screen */

@@ -1,0 +1,191 @@
+{
+  "analog_first_new_index": 16,
+  "digital_first_new_index": 21,
+  "factory_bank": [
+    [
+      "BK_BASS",
+      0,
+      "PSY BASS"
+    ],
+    [
+      "BK_BASS",
+      0,
+      "HI BASS"
+    ],
+    [
+      "BK_BASS",
+      1,
+      "SPIRAL BASS"
+    ],
+    [
+      "BK_KEYS",
+      0,
+      "PSY KICK"
+    ],
+    [
+      "BK_ORGAN",
+      0,
+      "GOA ACID"
+    ],
+    [
+      "BK_ORGAN",
+      0,
+      "VORTEX SQ"
+    ],
+    [
+      "BK_ORGAN",
+      1,
+      "ACID COIL"
+    ],
+    [
+      "BK_ORGAN",
+      1,
+      "PHASE CHIRP"
+    ],
+    [
+      "BK_ORGAN",
+      1,
+      "LIQUID FM"
+    ],
+    [
+      "BK_ORGAN",
+      1,
+      "VORTEX TALK"
+    ],
+    [
+      "BK_ORGAN",
+      1,
+      "ORBIT GROWL"
+    ],
+    [
+      "BK_PLUCK",
+      1,
+      "METAL HIT"
+    ],
+    [
+      "BK_PLUCK",
+      1,
+      "TORUS METAL"
+    ],
+    [
+      "BK_STAB",
+      1,
+      "RUST IMPACT"
+    ],
+    [
+      "BK_FX",
+      1,
+      "HITECH ZAP"
+    ],
+    [
+      "BK_FX",
+      1,
+      "LASER FALL"
+    ],
+    [
+      "BK_FX",
+      1,
+      "COIL BURST"
+    ],
+    [
+      "BK_FX",
+      1,
+      "PHASE BLIP"
+    ],
+    [
+      "BK_FX",
+      1,
+      "FRACTAL DROP"
+    ],
+    [
+      "BK_PAD",
+      1,
+      "NIGHT WHORL"
+    ],
+    [
+      "BK_BASS",
+      0,
+      "GROWL VA"
+    ],
+    [
+      "BK_BASS",
+      0,
+      "DARK MOTION"
+    ],
+    [
+      "BK_BASS",
+      0,
+      "TECH SNAP"
+    ],
+    [
+      "BK_BASS",
+      1,
+      "FM WOBBLE"
+    ],
+    [
+      "BK_BASS",
+      1,
+      "MODERN GROWL"
+    ],
+    [
+      "BK_BASS",
+      1,
+      "DROP SUB"
+    ],
+    [
+      "BK_KEYS",
+      0,
+      "VAPOR KEY"
+    ],
+    [
+      "BK_PAD",
+      0,
+      "MIDNIGHT PAD"
+    ],
+    [
+      "BK_PAD",
+      1,
+      "NEON SHIM"
+    ],
+    [
+      "BK_LEAD",
+      0,
+      "BIG ROOM LD"
+    ],
+    [
+      "BK_LEAD",
+      1,
+      "VOCAL FM"
+    ],
+    [
+      "BK_PLUCK",
+      0,
+      "MODERN PLUCK"
+    ],
+    [
+      "BK_PLUCK",
+      1,
+      "GLASS PLUCK"
+    ],
+    [
+      "BK_STAB",
+      1,
+      "CINEMA HIT"
+    ],
+    [
+      "BK_FX",
+      0,
+      "TRANCE RISE"
+    ],
+    [
+      "BK_FX",
+      1,
+      "RISER FX"
+    ]
+  ],
+  "modern_motion_pack": {
+    "analog_range": [21, 28],
+    "digital_range": [29, 36],
+    "authorship": "Original SPIRALFM1 designs inspired by the movement/wobble/growl and big-room sound of Vital and Serum 2; no third-party preset data imported."
+  }
+}

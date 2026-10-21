@@ -2,7 +2,7 @@
 /* Shared scene application for firmware and host audio integration tests. */
 static uint32_t arrangement_ready(void)
 {
-    if(my_song_active()) return 15u;
+    if(sf_song_active()) return 15u;
     uint32_t i, ready = 0;
     for (i = 0; i < ARR_SCENES; i++)
         if (proj_ok(&proj_slot[i])) ready |= 1u << i;
@@ -22,7 +22,7 @@ static void arrangement_apply(uint32_t scene)
         t->nheld = t->arp_phys = t->arp_note = t->rh_n = t->rskip_n = 0;
         t->rskip_lanes = 0;
     }
-    if(my_song_active()) my_song_apply(scene);
+    if(sf_song_active()) sf_song_apply(scene);
     else proj_apply(&proj_slot[scene], 0);
     sync_reload = 1;
     ui.force = 1;

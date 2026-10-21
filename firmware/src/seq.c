@@ -49,7 +49,7 @@ static uint8_t last_note = 60;
 static uint8_t pen_n = 1, pen_note[4] = {60};   /* the last chord / note played: the SEQ layer writes it */
 static uint8_t pen_lane;                       /* the last drum lane played: the SEQ layer's lane */
 static volatile uint8_t transport_req;   /* 1 start, 2 stop (from the UI) */
-static uint8_t mycelium_start_ready;     /* first played note after boot; STOP cancels it */
+static uint8_t spiralfm1_start_ready;     /* first played note after boot; STOP cancels it */
 static volatile uint8_t panic_req;       /* bit per track: release every sounding note (preset / engine change) */
 
 static uint32_t trk_index(const track_t *t) { return (uint32_t)(t - trk); }
@@ -442,10 +442,10 @@ static void steps_clear(track_t *t)           /* an empty pattern (synth: REST s
             t->step[k].time = ST_REST;
 }
 
-static uint8_t my_bass_style=2; /* 0 gallop, 1 offbeat, 2 full-on */
-static uint8_t my_fill, my_lead_style;
-static uint32_t my_fill_last = 0xFFFFFFFFu;
-static void mycelium_lead_pattern(uint32_t style)
+static uint8_t sf_bass_style=2; /* 0 gallop, 1 offbeat, 2 full-on */
+static uint8_t sf_fill, sf_lead_style;
+static uint32_t sf_fill_last = 0xFFFFFFFFu;
+static void spiralfm1_lead_pattern(uint32_t style)
 {
     uint32_t part,i;
     for(part=1;part<NPART;part++) {
@@ -458,9 +458,9 @@ static void mycelium_lead_pattern(uint32_t style)
         }
         t->seq_active=1;
     }
-    my_lead_style=(uint8_t)style;
+    sf_lead_style=(uint8_t)style;
 }
-static void mycelium_bass_pattern(uint32_t style)
+static void spiralfm1_bass_pattern(uint32_t style)
 {
     uint32_t i,root=36;
     track_t *t=&trk[0];
@@ -473,17 +473,17 @@ static void mycelium_bass_pattern(uint32_t style)
             s->vel=i%4==1?100:i%4==2?88:94;
         }
     }
-    t->seq_active=1;my_bass_style=(uint8_t)style;
+    t->seq_active=1;sf_bass_style=(uint8_t)style;
 }
 /* Two-bar Forest scene: straight kick, three bass sixteenths per beat, sparse FX. */
-static void mycelium_factory_groove(void)
+static void spiralfm1_factory_groove(void)
 {
     uint32_t i;
     for (i=0;i<NTRK;i++) {
         steps_clear(&trk[i]); trk[i].p[P_SLEN]=32; trk[i].p[P_SDIV]=2; trk[i].p[P_SSWING]=0;
     }
     song.g[G_BPM]=156; trk[0].p[P_SGATE]=88;
-    my_bass_style=2;
+    sf_bass_style=2;
     trk[1].p[P_SGATE]=44; trk[2].p[P_SGATE]=28;
     trk[1].p[P_LEVEL]=78; trk[2].p[P_LEVEL]=64;
     for(i=0;i<32;i++) {
@@ -502,7 +502,7 @@ static void mycelium_factory_groove(void)
 }
 
 /* Original two-bar Psytrance patterns: 1 rolling, 2 gallop, 3 Goa acid. */
-static void mycelium_psy_groove(uint32_t kind)
+static void spiralfm1_psy_groove(uint32_t kind)
 {
     uint32_t i;
     static const uint8_t melody[8] = {60, 63, 67, 63, 60, 70, 67, 63};
@@ -515,7 +515,7 @@ static void mycelium_psy_groove(uint32_t kind)
     }
     song.g[G_BPM] = kind == 5u ? 170 : kind == 4u ? 196 : kind == 3u ? 144 : kind == 2u ? 146 : 148;
     if(kind==5u) {
-        mycelium_bass_pattern(1);trk[0].p[P_DIST]=22;trk[0].p[P_LEVEL]=110;
+        spiralfm1_bass_pattern(1);trk[0].p[P_DIST]=22;trk[0].p[P_LEVEL]=110;
         trk[1].p[P_SGATE]=28;trk[2].p[P_SGATE]=24;
         for(i=0;i<32;i++) {
             if(i%4==0 || i==31)dstep_set(&TDRUM->dstep[i],0,LV_NORM,0);
@@ -890,17 +890,17 @@ static void arm_start(track_t *t)
 
 static void drum_input(uint32_t lane, uint32_t lvl, uint32_t rat, int rec);
 static int mclk_on(void);
-static void mycelium_play_start(void)
+static void spiralfm1_play_start(void)
 {
-    if (!mycelium_start_ready || song.playing || rec_wait || ci_on || mclk_on())
+    if (!spiralfm1_start_ready || song.playing || rec_wait || ci_on || mclk_on())
         return;
-    mycelium_start_ready = 0;
+    spiralfm1_start_ready = 0;
     if (!project_empty())
         seq_start();
 }
 static void input_on(track_t *t, uint32_t note, uint32_t vel)
 {
-    mycelium_play_start();
+    spiralfm1_play_start();
     if (is_drum(t)) {                             /* (a GM note on the drum track: its lane) */
         drum_input(lane_of_note(note), vel_lvl(vel), 0, 1);
         return;
@@ -942,7 +942,7 @@ static void drum_input(uint32_t lane, uint32_t lvl, uint32_t rat, int rec)
     track_t *t = TDRUM;
     lane &= 15u;
     if (rec)
-        mycelium_play_start();
+        spiralfm1_play_start();
     pen_lane = (uint8_t)lane;
     arm_start(t);
     if (ft_on && ft_trk == TRK_DRUM)
@@ -1413,7 +1413,7 @@ static void seq_release(track_t *t)
 static void seq_stop(void)
 {
     uint32_t i;
-    mycelium_start_ready = 0;
+    spiralfm1_start_ready = 0;
 #if FELUCCA_ARRANGER
     if (song.playing)
         srec_stop();                                /* SONG REC: the order played so far is the song */
@@ -1442,14 +1442,14 @@ static uint32_t step_vel(const step_t *s, uint32_t i)
 /* play one synth step: TIE extends, REST releases, NOTE (re)triggers; a SLIDE on the previous
  * step makes this one legato with a glide (acid style). skip: bit k = note k already sounds
  * from live recording (not triggered, not released here). len: the step's length (units). */
-static uint8_t my_prob_skip[NPART];
+static uint8_t sf_prob_skip[NPART];
 static void seq_step(track_t *t, const step_t *s, uint32_t slen, uint32_t skip)
 {
     uint32_t part=t==&trk[1]?1u:t==&trk[2]?2u:0u;
     uint32_t i, j, gate = slen * (uint32_t)t->p[P_SGATE] / 128u;
     uint32_t slide_in = t->seq_hold && t->seq_n;
     uint32_t next_tie = t->step[(t->seq_idx + 1u) % trk_len(t)].time == ST_TIE;
-    if(part)my_prob_skip[part]=0;
+    if(part)sf_prob_skip[part]=0;
     if (s->time == ST_TIE) {
         if (t->seq_n) {
             t->seq_off = gate + slen / 2u;
@@ -1462,7 +1462,7 @@ static void seq_step(track_t *t, const step_t *s, uint32_t slen, uint32_t skip)
         return;
     }
     if(part && t->p[P_APROB]<127 && (!t->p[P_APROB] || (rng()&127u)>=(uint32_t)t->p[P_APROB])) {
-        my_prob_skip[part]=1;seq_release(t);return;
+        sf_prob_skip[part]=1;seq_release(t);return;
     }
     if (s->rat) {                                   /* ratchets: each hit its share of the step */
         uint32_t hits = 1u + ((s->rat >> 0) & 3u);
@@ -1508,7 +1508,7 @@ static void drum_step(track_t *t, const dstep_t *s, uint32_t skip)
 static void seq_ratchets(track_t *t, uint32_t into, uint32_t slen)
 {
     uint32_t i;
-    if((t==&trk[1] && my_prob_skip[1]) || (t==&trk[2] && my_prob_skip[2]))return;
+    if((t==&trk[1] && sf_prob_skip[1]) || (t==&trk[2] && sf_prob_skip[2]))return;
     if (is_drum(t)) {
         const dstep_t *s = &t->dstep[t->seq_idx % NSTEP];
         uint32_t m = dstep_mask(s) & ~roll_lanes(t);
@@ -1821,13 +1821,13 @@ static void events_block(uint32_t n)
     for (i = 0; i < NTRK; i++)
         seq_tick(&trk[i], adv);
     click_tick();
-    if(my_fill && song.playing && !song.rec && !rec_wait && !ci_on) {
+    if(sf_fill && song.playing && !song.rec && !rec_wait && !ci_on) {
         uint32_t at=clk_beat*8u+clk_pos/(BEAT_U/8u);
-        if(at!=my_fill_last) {
-            my_fill_last=at;
+        if(at!=sf_fill_last) {
+            sf_fill_last=at;
             if(at&1u)trk_note_on(TDRUM,(at%32u>=28u)?39:42,72);
         }
-    } else my_fill_last=0xFFFFFFFFu;
+    } else sf_fill_last=0xFFFFFFFFu;
     roll_block(adv);
     for (i = 0; i < NPART; i++)
         arp_tick(&trk[i], adv);

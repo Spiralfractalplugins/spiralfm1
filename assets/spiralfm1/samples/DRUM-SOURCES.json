@@ -1,0 +1,92 @@
+{
+  "entries": [
+    {
+      "file": "PSY-KICK.wav",
+      "role": "KICK",
+      "kit_name": "PSY",
+      "sr": 44100,
+      "duration": 0.3,
+      "sha256": "74938a061645845e8b066824b1f94b49c401935f26954824d9f464082eeb68f8",
+      "source": "Original procedural synthesis: tools/gen_spiral_drums.py; no external audio input",
+      "kit": 32,
+      "note": 36
+    },
+    {
+      "file": "PSY-HAT.wav",
+      "role": "HAT",
+      "kit_name": "PSY",
+      "sr": 44100,
+      "duration": 0.11498866213151927,
+      "sha256": "b3247ec836f78a63ed49e9158cbf4babca0f63887af06897408634bda65664ec",
+      "source": "Original procedural synthesis: tools/gen_spiral_drums.py; no external audio input",
+      "kit": 32,
+      "note": 42
+    },
+    {
+      "file": "PSY-CLAP.wav",
+      "role": "CLAP",
+      "kit_name": "PSY",
+      "sr": 44100,
+      "duration": 0.16,
+      "sha256": "a0728ff9a8ff4c36a7c690b315028a8832157574637f1351e66004217e40e586",
+      "source": "Original procedural synthesis: tools/gen_spiral_drums.py; no external audio input",
+      "kit": 32,
+      "note": 39
+    },
+    {
+      "file": "FOREST-HAT.wav",
+      "role": "HAT",
+      "kit_name": "FOREST",
+      "sr": 44100,
+      "duration": 0.11498866213151927,
+      "sha256": "65aedb7cf74582c9d55980afeeefe1503c83a173e14b44e229f2a86e1e2ac55d",
+      "source": "Original procedural synthesis: tools/gen_spiral_drums.py; no external audio input",
+      "kit": 33,
+      "note": 42
+    },
+    {
+      "file": "FOREST-CLAP.wav",
+      "role": "CLAP",
+      "kit_name": "FOREST",
+      "sr": 44100,
+      "duration": 0.16,
+      "sha256": "5632a456b5011f7f039c9a499aac14ad10ec55bcf3c1e426cfc625daa2f13585",
+      "source": "Original procedural synthesis: tools/gen_spiral_drums.py; no external audio input",
+      "kit": 33,
+      "note": 39
+    },
+    {
+      "file": "HITECH-KICK.wav",
+      "role": "KICK",
+      "kit_name": "HITECH",
+      "sr": 44100,
+      "duration": 0.3,
+      "sha256": "4e24bac5a3b3d840c293dacd9d19993cb8aa2a27ac3bf012899bd9fde237e674",
+      "source": "Original procedural synthesis: tools/gen_spiral_drums.py; no external audio input",
+      "kit": 34,
+      "note": 36
+    },
+    {
+      "file": "HITECH-HAT.wav",
+      "role": "HAT",
+      "kit_name": "HITECH",
+      "sr": 44100,
+      "duration": 0.11498866213151927,
+      "sha256": "db766161b3443d38c48a10473b457def3950c07baab0443d68bbc40e93b5e73a",
+      "source": "Original procedural synthesis: tools/gen_spiral_drums.py; no external audio input",
+      "kit": 34,
+      "note": 42
+    },
+    {
+      "file": "HITECH-CLAP.wav",
+      "role": "CLAP",
+      "kit_name": "HITECH",
+      "sr": 44100,
+      "duration": 0.16,
+      "sha256": "ce15ea4f5851fee7bc24e18e46dd463de45c827e882f18b7cdc9778cd4cc888e",
+      "source": "Original procedural synthesis: tools/gen_spiral_drums.py; no external audio input",
+      "kit": 34,
+      "note": 39
+    }
+  ]
+}

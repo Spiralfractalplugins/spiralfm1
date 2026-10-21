@@ -1,4 +1,4 @@
-# Building MYCELIUM
+# Building SPIRALFM1
 
 The build makes three files in `build/`:
 
@@ -10,7 +10,7 @@ The build makes three files in `build/`:
 
 ## Windows (WSL)
 
-`tools/windows/INSTALL-MYCELIUM.bat` (which runs `build-mycelium.ps1`) builds in a WSL
+`tools/windows/INSTALL-SPIRALFM1.bat` (which runs `build-spiralfm1.ps1`) builds in a WSL
 distribution and opens the installer on `http://localhost:8766/webapp/installer/`. It needs
 Python 3 with Pillow on Windows, a WSL distribution with the JieLi toolchain, and the three
 SDK files (below) in `build/deps/ac79`. Pass `-Distro NAME` (default `MinUI-Build`) and
@@ -96,8 +96,8 @@ does the same for the cost files.
 
 ## Install
 
-On Windows, `tools/windows/INSTALL-MYCELIUM.bat` builds and opens the web installer (Chrome or Edge). The
-`.fwsc` of each release is on the [releases page](https://github.com/Spiralfractalplugins/mycelium-fm1/releases).
+On Windows, `tools/windows/INSTALL-SPIRALFM1.bat` builds and opens the web installer (Chrome or Edge). The
+`.fwsc` of each release is on the [releases page](https://github.com/Spiralfractalplugins/spiralfm1/releases).
 
 From the command line (needs `pip3 install mido python-rtmidi`):
 

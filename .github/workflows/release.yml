@@ -1,4 +1,4 @@
-# MYCELIUM releases: on a version tag, build and publish the .fwsc and the installer site.
+# SPIRALFM1 releases: on a version tag, build and publish the .fwsc and the installer site.
 # The build keeps the development identity FM-1_900 (like upstream's released packages):
 # the device only OTA-installs its own family, so a release must match the Pages installer.
 name: release
@@ -51,14 +51,14 @@ jobs:
         env:
           VERSION: ${{ steps.ver.outputs.version }}
         run: |
-          cp build/felucca.fwsc "mycelium-$VERSION.fwsc"
-          sha256sum "mycelium-$VERSION.fwsc" > SHA256SUMS.txt
-          (cd site && zip -qr "../mycelium-$VERSION-site.zip" .)
+          cp build/felucca.fwsc "spiralfm1-$VERSION.fwsc"
+          sha256sum "spiralfm1-$VERSION.fwsc" > SHA256SUMS.txt
+          (cd site && zip -qr "../spiralfm1-$VERSION-site.zip" .)
       - uses: softprops/action-gh-release@v2
         env:
           VERSION: ${{ steps.ver.outputs.version }}
         with:
           files: |
-            mycelium-${{ env.VERSION }}.fwsc
-            mycelium-${{ env.VERSION }}-site.zip
+            spiralfm1-${{ env.VERSION }}.fwsc
+            spiralfm1-${{ env.VERSION }}-site.zip
             SHA256SUMS.txt

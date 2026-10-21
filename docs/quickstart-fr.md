@@ -10,7 +10,7 @@ Le manuel complet (en anglais) : [MANUAL.md](MANUAL.md).
 
 ## Installer
 
-1. Double-clique **`tools\windows\INSTALL-MYCELIUM.bat`** : il compile le firmware et ouvre l'installateur sur `http://localhost:8766/webapp/installer/`.
+1. Double-clique **`tools\windows\INSTALL-SPIRALFM1.bat`** : il compile le firmware et ouvre l'installateur sur `http://localhost:8766/webapp/installer/`.
 2. Dans **Chrome ou Edge**, branche le FM-1 en USB (câble de données, directement, sans hub).
 3. **INSTALL**, autorise le MIDI, attends *Done*. Garde la fenêtre noire ouverte jusque-là.
 

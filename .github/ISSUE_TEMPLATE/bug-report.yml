@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        For firmware bugs: which MYCELIUM version (`git describe` or the release tag), which FM-1
+        For firmware bugs: which SPIRALFM1 version (`git describe` or the release tag), which FM-1
         stock firmware (V15?), which page / engine / preset. Flashing firmware is at your own risk.
   - type: textarea
     attributes:

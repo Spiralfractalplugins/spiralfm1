@@ -3,10 +3,10 @@
 /* Felucca user interface. Four columns map to KNOB 1..4. Rendering is lazy:
  * every element remembers what it last drew and is redrawn only on change. */
 #ifndef FELUCCA_VERSION
-#define FELUCCA_VERSION "MYCELIUM 1.0"
+#define FELUCCA_VERSION "SPIRALFM1 1.0"
 #endif
-static uint8_t my_arp_logo;
-static void my_song_picker(void);
+static uint8_t sf_arp_logo;
+static void sf_song_picker(void);
 static void project_save(uint32_t slot);
 static void sloop_splash(void);
 static void arrangement_save(void);
@@ -219,7 +219,7 @@ static void go_home(void)
  * writes the sequencer: every pattern is the one the player records or enters. */
 
 /* the parts' sounds at power-on (engine, preset): bass, pad, lead */
-static const uint8_t TRK_DEF[NPART][2] = {{0, 16}, {1, 21}, {1, 23}};   /* MYCELIUM: PSY BASS, ACID FOAM, METAL HIT */
+static const uint8_t TRK_DEF[NPART][2] = {{0, 16}, {1, 21}, {1, 23}};   /* SPIRALFM1: PSY BASS, ACID COIL, METAL HIT */
 static uint32_t trk_def_engine(uint32_t i) { return i < NPART ? TRK_DEF[i][0] : 0u; }
 
 static int seq_is_empty(const track_t *t) { return track_empty(t); }
@@ -302,14 +302,14 @@ static void track_defaults(track_t *t)
 }
 
 /* switch engine (its defaults + first preset) and say so */
-static uint32_t mycelium_first_preset(uint32_t e);
+static uint32_t spiralfm1_first_preset(uint32_t e);
 static void select_engine(uint32_t e)
 {
     if (is_drum(TSEL))
         return;
     if (e > 1u) e = 1u;
     set_engine(e);
-    apply_preset(mycelium_first_preset(e));
+    apply_preset(spiralfm1_first_preset(e));
     ui_say("ENGINE ", ENGINES[TSEL->eng_req]->name);
     ui.force = 1;
 }
@@ -322,25 +322,25 @@ static const char *const BANK_KIND[] = {"BASS", "KICK", "SQCH", "ATMO", "LEAD", 
 static const struct { uint8_t kind, e; const char *name; } BANK[] = {
     {BK_BASS, 0, "PSY BASS"},
     {BK_BASS, 0, "HI BASS"},
-    {BK_BASS, 1, "ROOT BASS"},
+    {BK_BASS, 1, "SPIRAL BASS"},
     {BK_KEYS, 0, "PSY KICK"},
     {BK_ORGAN, 0, "GOA ACID"},
-    {BK_ORGAN, 0, "SWAMP SQ"},
-    {BK_ORGAN, 1, "ACID FOAM"},
-    {BK_ORGAN, 1, "SWAMP CHIRP"},
+    {BK_ORGAN, 0, "VORTEX SQ"},
+    {BK_ORGAN, 1, "ACID COIL"},
+    {BK_ORGAN, 1, "PHASE CHIRP"},
     {BK_ORGAN, 1, "LIQUID FM"},
-    {BK_ORGAN, 1, "SPORE TALK"},
-    {BK_ORGAN, 1, "BARK GROWL"},
+    {BK_ORGAN, 1, "VORTEX TALK"},
+    {BK_ORGAN, 1, "ORBIT GROWL"},
     {BK_PLUCK, 1, "METAL HIT"},
-    {BK_PLUCK, 1, "GILL METAL"},
+    {BK_PLUCK, 1, "TORUS METAL"},
     {BK_STAB, 1, "RUST IMPACT"},
     {BK_FX, 1, "HITECH ZAP"},
     {BK_FX, 1, "LASER FALL"},
-    {BK_FX, 1, "SPORE BURST"},
-    {BK_FX, 1, "HYPHA BLIP"},
-    {BK_FX, 1, "FUNGAL DROP"},
-    {BK_PAD, 1, "MOSS DRONE"},
-    {BK_PAD, 1, "NIGHT SPORE"},
+    {BK_FX, 1, "COIL BURST"},
+    {BK_FX, 1, "PHASE BLIP"},
+    {BK_FX, 1, "FRACTAL DROP"},
+    {BK_PAD, 1, "HELIX DRONE"},
+    {BK_PAD, 1, "NIGHT WHORL"},
     {BK_BASS, 0, "GROWL VA"},
     {BK_BASS, 0, "DARK MOTION"},
     {BK_BASS, 0, "TECH SNAP"},
@@ -373,7 +373,7 @@ static void bank_resolve(void)
     }
     bank_ready = 1;
 }
-static uint32_t mycelium_first_preset(uint32_t e)
+static uint32_t spiralfm1_first_preset(uint32_t e)
 {
     uint32_t i;
     if (!bank_ready) bank_resolve();
@@ -459,4 +459,4 @@ static void track_select(uint32_t i)
     sync_reload = 1;
     ui.force = 1;
 }
-#include "mycelium_songs.c"
+#include "spiralfm1_songs.c"

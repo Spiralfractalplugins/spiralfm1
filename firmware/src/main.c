@@ -112,13 +112,13 @@ static void felucca_init(void)
         }
         track_defaults_steps(t);              /* the sequencers start empty */
     }
-    TDRUM->p[P_E0] = MY_DRUM_FOREST;
+    TDRUM->p[P_E0] = SF_DRUM_FOREST;
     song.sel = 0;
     song.master_q12 = 2048;
-    mycelium_factory_groove();                /* new instruments begin with a playable groove */
+    spiralfm1_factory_groove();                /* new instruments begin with a playable groove */
     song.g[G_DUCK] = 28;
     autosave_resume();                        /* saved work replaces the complete factory scene */
-    mycelium_start_ready = 1;
+    spiralfm1_start_ready = 1;
     song.g[G_SYNC] = (int16_t)lights_sync;    /* a setting of the FM-1 (panel.c) */
     layers_init();                            /* the panel's layer buttons for the keys (ui_layers.c) */
     go_home();
@@ -167,7 +167,7 @@ static void fm1_main(void)
         panel_setup();                        /* OCT- + OCT+ held at power-on */
         settings_save();
     }
-    { /* original Mandalars logo stays about four seconds, watchdog serviced */
+    { /* the SPIRALFM1 logo stays about four seconds, watchdog serviced */
         uint32_t i;
         for(i=0;i<40u;i++) {fm1_wdt_feed();fm1_delay_ms(100);}
     }

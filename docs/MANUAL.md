@@ -77,7 +77,7 @@ SLOOP is free and open source (GPL-3.0), based on [Felucca](https://github.com/h
 
 ## Install
 
-1. Run **`tools\windows\INSTALL-MYCELIUM.bat`** from the repo root. It builds the firmware and opens the installer at `http://localhost:8766/webapp/installer/`.
+1. Run **`tools\windows\INSTALL-SPIRALFM1.bat`** from the repo root. It builds the firmware and opens the installer at `http://localhost:8766/webapp/installer/`.
 2. In **Chrome or Edge**, connect the FM-1 to the computer by USB (a data cable, directly — no hub).
 3. Press **INSTALL**, allow MIDI access, and wait for *Done*. Keep the black window open until then.
 
@@ -404,7 +404,7 @@ The glow is a short pulse on every scan of the panel (about 900 times a second):
 
 ## Rescue, going back, credits
 
-- **USB rescue:** hold **OCT−** alone while switching on (*SLOOP USB RESCUE*), then install again.
+- **USB rescue:** hold **OCT−** alone while switching on (*SPIRALFM1 USB RESCUE*), then install again.
 - **Interrupted install:** the FM-1 stays in update mode; press Install again and it finishes. A damaged package is refused, and the FM-1 keeps waiting for a good one.
 - **Back to the official firmware:** on the installer page, open **Return to the official firmware (V15)**: save a backup with the editor first, download FM-1 V15 from m-vave.com, select its FM-1.fwsc (only that exact file is accepted) and install it. M-VAVE's own updater, M-UPGRADE, works too (close every other app that uses MIDI first). To come back to SLOOP, install it again and restore your backup.
 - **Credits:** SLOOP is based on Felucca by Leo Kuroshita (@kurogedelic), Hügelton Instruments — engines, sequencer, editor and installer. Played-note key lights: @renebohne (pull request #11). TRS MIDI input buffer fix: Felucca [Salt] by ChanceTheMaker, found by keremimo. Knob reading, MIDI input, overload shedding, LED glow, key debounce, MIDI clock, the USB audio input and the return to the official firmware after Felucca 1.0 / 1.0.1. Font: Terminus (SIL OFL 1.1). Samples: Versilian Studios VSCO-2 CE and VCSL, Sonic Pi (all CC0). PHASE: CrispyZebra (GPL). VOICE after klattsch (MIT). Interface ideas after teenage engineering's pocket operators and EP-133, Elektron's step entry and Akai's MPC (swing, note repeat, erase) — SLOOP is not affiliated with any of them.

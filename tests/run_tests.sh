@@ -80,7 +80,7 @@ $CC -o "$OUT/ldr_test" tests/ldr_test.c
 run "update loader: other app -> this build" "$OUT/ldr_test" "$OUT/old.fwsc" build/felucca.fwsc
 
 $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/hostsim" tests/hostsim.c -lm
-$CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/motion_pack_test" tests/mycelium_motion_pack_test.c -lm
+$CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/motion_pack_test" tests/spiralfm1_motion_pack_test.c -lm
 run "MODERN MOTION pack: 16 Vital/Serum-inspired presets, params, names, audible, bounded" "$OUT/motion_pack_test"
 $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/scale_test" tests/scale_test.c -lm
 run "scales: white-key mapping and note lifecycle" "$OUT/scale_test"

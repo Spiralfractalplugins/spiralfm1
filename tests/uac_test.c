@@ -48,11 +48,11 @@ static void test_descriptors(void)
     char name[96];
 
     check("device descriptor: 18 bytes, type 1, EP0 64", DEV_DESC[0] == 18 && DEV_DESC[1] == 1 && DEV_DESC[7] == 64);
-    check("Mycelium descriptor revision 4, with USB audio (x.1x)", (DEV_DESC[12] & 0xF0u) == 0x10u && DEV_DESC[13] == 4);
-    check("USB product is Mycelium, valid UTF-16 descriptor", sizeof STR2 == 18 && STR2[0] == 18 &&
-          !memcmp(STR2 + 2, "M\0y\0c\0e\0l\0i\0u\0m\0", 16));
-    check("USB manufacturer is Mandalars, valid UTF-16 descriptor", sizeof STR1 == 20 && STR1[0] == 20 &&
-          !memcmp(STR1 + 2, "M\0a\0n\0d\0a\0l\0a\0r\0s\0", 18));
+    check("SPIRALFM1 descriptor revision 4, with USB audio (x.1x)", (DEV_DESC[12] & 0xF0u) == 0x10u && DEV_DESC[13] == 4);
+    check("USB product is SPIRALFM1, valid UTF-16 descriptor", sizeof STR2 == 20 && STR2[0] == 20 &&
+          !memcmp(STR2 + 2, "S\0P\0I\0R\0A\0L\0F\0M\0" "1\0", 18));
+    check("USB manufacturer is Spiralfractal, valid UTF-16 descriptor", sizeof STR1 == 28 && STR1[0] == 28 &&
+          !memcmp(STR1 + 2, "S\0p\0i\0r\0a\0l\0f\0r\0a\0c\0t\0a\0l\0", 26));
     check(T_CDC ? "device class misc / IAD (EF 02 01)" : "device class 0 (per interface)",
           T_CDC ? DEV_DESC[4] == 0xEF && DEV_DESC[5] == 2 && DEV_DESC[6] == 1 : DEV_DESC[4] == 0);
     check("configuration: type 2, wTotalLength = the bytes sent", c[1] == 2 && total == n);

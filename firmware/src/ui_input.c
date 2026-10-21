@@ -436,7 +436,7 @@ static void edit_param(uint32_t slot, int32_t steps)
         break;
     case G_INITSND:
         *vp = 0;
-        select_engine(TSEL->eng_req);                           /* curated Mycelium starting sound */
+        select_engine(TSEL->eng_req);                           /* curated SPIRALFM1 starting sound */
         ui_message("SOUND INIT");
         ui.force = 1;
         break;
@@ -547,8 +547,8 @@ static void layer_tap(uint32_t layer)
 #if FELUCCA_ARRANGER
         if(arrangement_enabled) {ui_message("EXIT SONG MODE FIRST");break;}
 #endif
-        fm1_irq_off();mycelium_bass_pattern((my_bass_style+1u)%3u);fm1_irq_on();
-        ui_message(my_bass_style==0?"BASS GALLOP":my_bass_style==1?"BASS OFFBEAT":"BASS FULL-ON");
+        fm1_irq_off();spiralfm1_bass_pattern((sf_bass_style+1u)%3u);fm1_irq_on();
+        ui_message(sf_bass_style==0?"BASS GALLOP":sf_bass_style==1?"BASS OFFBEAT":"BASS FULL-ON");
         ui.force=1;
         break;
     case LY_SCALE:
@@ -558,13 +558,13 @@ static void layer_tap(uint32_t layer)
         open_family(FAM_GLO);
         break;
     case LY_SONG:                                         /* SAVE tapped: TRACKS -> the song, else the SAVE pages */
-        if(on_song_page())my_song_picker();
+        if(on_song_page())sf_song_picker();
         else if (!ui.home && cur_page()->scope == SC_TRK)
-            my_song_picker();
+            sf_song_picker();
         else if (on_drum_page())
-            my_song_picker();
+            sf_song_picker();
         else if(ui.home)
-            my_song_picker();
+            sf_song_picker();
         else
             open_family(FAM_SAVE);
         break;
@@ -633,8 +633,8 @@ static int layers_input(uint32_t note_edges, uint32_t *pressed, uint32_t home)
         ly_lock=LY_ROLL;used[LY_ROLL]=1;ui.force=1;
     }
     {uint8_t logo=(uint8_t)(held==LY_ROLL && !fm1_in.notes && (ly_lock==LY_ROLL || now-t0[LY_ROLL]>=700u));
-     if(logo!=my_arp_logo)ui.force=1;
-     my_arp_logo=logo;}
+     if(logo!=sf_arp_logo)ui.force=1;
+     sf_arp_logo=logo;}
     punch.hold = (uint8_t)(held == LY_FX);
     if (held != LY_PLAY && held != ui.layer && ui.layer != LY_PLAY)
         ui.layer = (uint8_t)held;                         /* (from one layer straight to another) */
@@ -785,7 +785,7 @@ static void ui_input(void)
     uint32_t pressed = fm1_input_edges(0), notes = fm1_input_note_edges(), now = fm1_ticks(), id, b, k;
     uint32_t home = btn_hold(&ui.home_t0, B_HOME, now, 1);
     uint32_t env = btn_hold(&ui.env_t0, B_ENV, now, 1), lfo = btn_hold(&ui.lfo_t0, B_LFO, now, 1);
-    if(!(fm1_in.buttons & (1u<<panel.btn[B_ENV])))my_fill=0;
+    if(!(fm1_in.buttons & (1u<<panel.btn[B_ENV])))sf_fill=0;
     int32_t s;
     int layered;
     if (pressed || notes)
@@ -818,8 +818,8 @@ static void ui_input(void)
     if(!layered && (env==BT_HOLD || lfo==BT_HOLD)) {
         if(song.rec || rec_wait || ci_on)ui_message("STOP RECORDING FIRST");
         else if(arrangement_enabled)ui_message("EXIT SONG MODE FIRST");
-        else if(env==BT_HOLD) {my_fill=(uint8_t)song.playing;ui_message(song.playing?"PSY FILL: HOLD ENV":"PLAY FIRST");}
-        else {fm1_irq_off();mycelium_lead_pattern((my_lead_style+1u)%3u);fm1_irq_on();ui_message(my_lead_style==0?"LEAD FOREST":my_lead_style==1?"LEAD GOA":"LEAD HITECH");ui.force=1;}
+        else if(env==BT_HOLD) {sf_fill=(uint8_t)song.playing;ui_message(song.playing?"PSY FILL: HOLD ENV":"PLAY FIRST");}
+        else {fm1_irq_off();spiralfm1_lead_pattern((sf_lead_style+1u)%3u);fm1_irq_on();ui_message(sf_lead_style==0?"LEAD FOREST":sf_lead_style==1?"LEAD GOA":"LEAD HITECH");ui.force=1;}
     }
     if(!layered && env==BT_TAP)open_family(FAM_ENV);
     if(!layered && lfo==BT_TAP)open_family(FAM_LFO);
@@ -911,7 +911,7 @@ static void ui_input(void)
          * being edited. Every detent counts */
         uint32_t total, cur = preset_pos(&total);
         if (is_drum(TSEL))
-            mycelium_drum_step(s);
+            spiralfm1_drum_step(s);
         else if (total)
             preset_go((uint32_t)(((int32_t)cur + s % (int32_t)total + (int32_t)total) % (int32_t)total));
     }

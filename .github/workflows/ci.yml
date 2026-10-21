@@ -1,4 +1,4 @@
-# MYCELIUM CI: firmware build, every host test, web tests.
+# SPIRALFM1 CI: firmware build, every host test, web tests.
 name: ci
 on:
   push:
@@ -45,5 +45,5 @@ jobs:
         run: sha256sum build/felucca.fwsc
       - uses: actions/upload-artifact@v4
         with:
-          name: mycelium-${{ github.sha }}
+          name: spiralfm1-${{ github.sha }}
           path: build/felucca.fwsc

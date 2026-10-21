@@ -25,10 +25,10 @@ static const engine_t *const ENGINES[NENGINES] = {&ENG_ANALOG, &ENG_DIGITAL, &EN
 /* every factory sound as loud as the others: a level trim per preset, 1/2 dB, measured on a phrase
  * that fits the sound (tools/level_presets.py writes preset_trim.h); a track keeps it in P_ED_FX */
 #include "preset_trim.h"
-#include "mycelium_trim.h"
+#include "spiralfm1_trim.h"
 static int16_t preset_trim(uint32_t e, uint32_t pi)
 {
-    if (e == 1u && pi >= 13u && pi < sizeof(MY_DIGITAL_TRIM)) return MY_DIGITAL_TRIM[pi];
-    if (e == 0u && pi >= 16u && pi < sizeof(MY_ANALOG_TRIM)) return MY_ANALOG_TRIM[pi];
+    if (e == 1u && pi >= 13u && pi < sizeof(SF_DIGITAL_TRIM)) return SF_DIGITAL_TRIM[pi];
+    if (e == 0u && pi >= 16u && pi < sizeof(SF_ANALOG_TRIM)) return SF_ANALOG_TRIM[pi];
     return e < PT_ENGINES && pi < PT_MAX ? PRESET_TRIM[e][pi] : 0;
 }

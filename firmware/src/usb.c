@@ -141,7 +141,7 @@ static void midi_out_event(uint32_t pkt)            /* from the audio ISR */
 #define USB_NIF (2 + FELUCCA_UAC + 2 * FELUCCA_CDC)
 #if FELUCCA_CDC
 static const uint8_t DEV_DESC[18] = {18, 1, 0x00, 0x02, 0xEF, 0x02, 0x01, 64, 0x09, 0x12, 0x01, 0x00,
-                                     0x01 + 0x10 * FELUCCA_UAC, 0x04, 1, 2, 0, 1};   /* Mycelium revision; refresh host descriptor cache */
+                                     0x01 + 0x10 * FELUCCA_UAC, 0x04, 1, 2, 0, 1};   /* SPIRALFM1 revision; refresh host descriptor cache */
 static const uint8_t CFG_DESC[] = {
     9, 2, CFG_LEN & 0xFF, CFG_LEN >> 8, USB_NIF, 1, 0, 0x80, 50,
     8, 0x0B, 0, 2 + FELUCCA_UAC, 1, 1, 0, 0,            /* IAD: audio + MIDI (IF 0-1, 0-2) */
@@ -197,12 +197,13 @@ static const uint8_t CFG_DESC[] = {
 };
 typedef char cfg_len_ok[sizeof CFG_DESC == CFG_LEN ? 1 : -1];
 static const uint8_t STR0[4] = {4, 3, 0x09, 0x04};
-static const uint8_t STR1[] = {20, 3, 'M', 0, 'a', 0, 'n', 0, 'd', 0, 'a', 0, 'l', 0, 'a', 0, 'r', 0, 's', 0};
+static const uint8_t STR1[] = {28, 3, 'S', 0, 'p', 0, 'i', 0, 'r', 0, 'a', 0, 'l', 0,
+                               'f', 0, 'r', 0, 'a', 0, 'c', 0, 't', 0, 'a', 0, 'l', 0};
 #ifdef FELUCCA_LOADER
-static const uint8_t STR2[] = {32, 3, 'M', 0, 'y', 0, 'c', 0, 'e', 0, 'l', 0, 'i', 0, 'u', 0, 'm', 0, ' ', 0,
+static const uint8_t STR2[] = {34, 3, 'S', 0, 'P', 0, 'I', 0, 'R', 0, 'A', 0, 'L', 0, 'F', 0, 'M', 0, '1', 0, ' ', 0,
                                'U', 0, 'p', 0, 'd', 0, 'a', 0, 't', 0, 'e', 0};
 #else
-static const uint8_t STR2[] = {18, 3, 'M', 0, 'y', 0, 'c', 0, 'e', 0, 'l', 0, 'i', 0, 'u', 0, 'm', 0};
+static const uint8_t STR2[] = {20, 3, 'S', 0, 'P', 0, 'I', 0, 'R', 0, 'A', 0, 'L', 0, 'F', 0, 'M', 0, '1', 0};
 #endif
 
 static int get_desc(uint32_t wvalue, const uint8_t **d, uint16_t *l)

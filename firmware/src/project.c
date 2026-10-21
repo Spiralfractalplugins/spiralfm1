@@ -343,7 +343,7 @@ static void project_apply(const project_t *p)
 
 static void project_load(uint32_t slot)
 {
-    if(my_song_active() && !song.playing && !transport_req) my_song_exit();
+    if(sf_song_active() && !song.playing && !transport_req) sf_song_exit();
     project_t *p = &proj_slot[slot & 3u];
 #if FELUCCA_ARRANGER
     if (song.playing || transport_req) { ui_message("STOP BEFORE LOAD"); return; }
@@ -525,7 +525,7 @@ static void persist_fill(persist_t *p)              /* the settings as they are 
     p->panel = panel;
     p->lights = lights_word();
 #if FELUCCA_ARRANGER
-    p->arrangement = my_song_active() && my_user_order_kept ? my_user_order : arrangement;
+    p->arrangement = sf_song_active() && sf_user_order_kept ? sf_user_order : arrangement;
 #endif
 }
 
@@ -625,7 +625,7 @@ static uint32_t project_restore(uint32_t slot, const void *raw, uint32_t n)
 #if FELUCCA_ARRANGER
 static void arrangement_save(void)
 {
-    if(my_song_active()) { ui_message("FACTORY SONG IN ROM"); return; }
+    if(sf_song_active()) { ui_message("FACTORY SONG IN ROM"); return; }
     if (song.playing || transport_req) { ui_message("STOP BEFORE SAVE"); return; }
     settings_save();
 #if FELUCCA_FLASH
@@ -642,7 +642,7 @@ static void arrangement_save(void)
  * stops the audio for ~50 ms); a song recorded with SONG REC is saved the same way. */
 static void section_store(uint32_t s)
 {
-    if(my_song_active()) { ui_message("FACTORY: READ ONLY"); return; }
+    if(sf_song_active()) { ui_message("FACTORY: READ ONLY"); return; }
     s &= 3u;
     fm1_irq_off();                                      /* (the audio ISR may be applying a section) */
     proj_capture(&proj_slot[s]);

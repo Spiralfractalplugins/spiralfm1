@@ -5,16 +5,16 @@
 enum { MI_COLOR, MI_LOWCUT, MI_ZOOM, MI_LIGHTS, MI_KEYS, MI_NOTES, MI_USB, MI_PANEL, MI_ABOUT, MI_JAM, MI_LOGO, MI_SONGS, MI_BACK, MI_COUNT };
 static const char *const MI_NAME[MI_COUNT] = {"COLOR", "LOWCUT", "ZOOM", "LIGHTS", "KEYS", "NOTES", "USB AUDIO",
                                               "HARDWARE CALIBRATION", "ABOUT", "GROOVES", "LOGO", "SONGS", "BACK"};
-static const char *const MY_GROOVE_NAME[] = {"FOREST JAM", "PSY ROLL", "PSY GALLOP", "GOA ACID", "HITECH", "TEKK", "BACK"};
-static uint8_t my_groove_sel, my_song_sel;
-static void my_song_picker(void) {ui.menu=6;my_song_sel=0;ui.force=1;}
+static const char *const SF_GROOVE_NAME[] = {"FOREST JAM", "PSY ROLL", "PSY GALLOP", "GOA ACID", "HITECH", "TEKK", "BACK"};
+static uint8_t sf_groove_sel, sf_song_sel;
+static void sf_song_picker(void) {ui.menu=6;sf_song_sel=0;ui.force=1;}
 static const char *const LIGHTS_NAME[LIGHTS_N] = {"OFF", "LOW", "MID", "HIGH"};   /* every button lit, the labels readable */
 static const char *const KEYS_NAME[KEYS_N] = {"OFF", "C KEYS", "WHITE KEYS"};      /* keys lit too, at the LIGHTS level */
 #define MI_DY 14                                   /* rows between two menu lines */
 
 static void draw_menu(void)
 {
-    uint32_t i, pass, sig = ui.menu * 7u + my_song_sel * 47u + my_groove_sel * 31u + ui.menu_sel * 131u + settings.palette * 1009u + settings.lowcut * 7919u +
+    uint32_t i, pass, sig = ui.menu * 7u + sf_song_sel * 47u + sf_groove_sel * 31u + ui.menu_sel * 131u + settings.palette * 1009u + settings.lowcut * 7919u +
                             settings.zoom * 104729u + lights_lvl * 1299709u + lights_keys * 15485863u +
                             lights_notes * 32452843u + usb_full * 49979687u;
     if (!ui.force && sig == ui.menu_sig)
@@ -31,14 +31,14 @@ static void draw_menu(void)
         cv_begin(240, pass ? 95u : 124u, C_BLACK);
         cv_oy = pass ? -124 : 0;
         if(ui.menu==6) {
-            for(i=0;i<5;i++) {const char *name=i<4?MY_SONG_NAMES[i]:"USER SONG";
-                cv_text(14,12+i*25,&FONT_S,name,i==my_song_sel?C_WHITE:C_GRAY);
-                if(i==my_song_sel)cv_rect(4,18+i*25,3,3,C_HI);
+            for(i=0;i<5;i++) {const char *name=i<4?SF_SONG_NAMES[i]:"USER SONG";
+                cv_text(14,12+i*25,&FONT_S,name,i==sf_song_sel?C_WHITE:C_GRAY);
+                if(i==sf_song_sel)cv_rect(4,18+i*25,3,3,C_HI);
             }
             cv_text(4,150,&FONT_S,"240 BARS / EPIC JOURNEY",C_HI);
             cv_text(4,174,&FONT_S,"OCT+ LOAD  OCT- BACK",C_DIM);
         } else if(ui.menu==7) {
-            cv_text(4,8,&FONT_S,MY_SONG_NAMES[my_song_sel],C_HI);
+            cv_text(4,8,&FONT_S,SF_SONG_NAMES[sf_song_sel],C_HI);
             cv_text(4,44,&FONT_S,"REPLACE CURRENT LOOP?",C_WHITE);
             cv_text(4,68,&FONT_S,"USER SLOTS KEPT",C_HI);
             cv_text(4,94,&FONT_S,"SAVE YOUR WORK FIRST",C_AMB);
@@ -46,26 +46,26 @@ static void draw_menu(void)
             cv_text(4,158,&FONT_S,"OCT- CANCEL",C_DIM);
         } else if (ui.menu == 3) {
             for (i = 0; i < 7u; i++) {
-                cv_text(14, 8 + i * 20, &FONT_S, MY_GROOVE_NAME[i], i == my_groove_sel ? C_WHITE : C_GRAY);
-                if (i == my_groove_sel) cv_rect(4, 14 + i * 20, 3, 3, C_HI);
+                cv_text(14, 8 + i * 20, &FONT_S, SF_GROOVE_NAME[i], i == sf_groove_sel ? C_WHITE : C_GRAY);
+                if (i == sf_groove_sel) cv_rect(4, 14 + i * 20, 3, 3, C_HI);
             }
             cv_text(4, 150, &FONT_S, "PRESETS SELECT", C_AMB);
             cv_text(4, 174, &FONT_S, "OCT+ LOAD  OCT- BACK", C_DIM);
         } else if (ui.menu == 4) {
-            cv_text(4, 8, &FONT_S, MY_GROOVE_NAME[my_groove_sel], C_HI);
+            cv_text(4, 8, &FONT_S, SF_GROOVE_NAME[sf_groove_sel], C_HI);
             cv_text(4, 44, &FONT_S, "REPLACE CURRENT LOOP?", C_WHITE);
             cv_text(4, 68, &FONT_S, "SAVE YOUR WORK FIRST", C_AMB);
             cv_text(4, 110, &FONT_S, "OCT+ REPLACE", C_HI);
             cv_text(4, 134, &FONT_S, "OCT- CANCEL", C_DIM);
         } else if (ui.menu == 2) {
-            cv_text(4, 4, &FONT_L, "MYCELIUM", C_HI);
-            cv_text(4, 36, &FONT_S, "SLOOP / FELUCCA", C_AMB);
+            cv_text(4, 4, &FONT_L, "SPIRALFM1", C_HI);
+            cv_text(4, 36, &FONT_S, "MYCELIUM / SLOOP / FELUCCA", C_AMB);
             cv_text(4, 54, &FONT_S, FELUCCA_VERSION, C_HI);
             cv_text(cv_text(4, 72, &FONT_S, "LEO KUROSHITA", C_HI) + 8, 72, &FONT_S, "@KUROGEDELIC", C_AMB);
             cv_text(4, 88, &FONT_S, "H\xDCGELTON INSTRUMENTS", C_HI);   /* Latin-1 U-umlaut */
             cv_text(4, 104, &FONT_S, "HUGELTON.COM", C_AMB);
             cv_text(4, 119, &FONT_S, "GPL-3.0, NO WARRANTY", C_HI);
-            cv_text(4, 132, &FONT_S, "GITHUB.COM/ISOD89/SLOOP-FM1", C_AMB);   /* (the source of this firmware) */
+            cv_text(4, 132, &FONT_S, "GITHUB.COM/ISOD89/SLOOP-FM1", C_AMB);   /* (the groovebox base; this build: SPIRALFRACTALPLUGINS) */
             cv_text(4, 146, &FONT_S, "FONT: TERMINUS (OFL)", C_DIM);
             cv_text(4, 159, &FONT_S, "SAMPLES: VERSILIAN (CC0)", C_DIM);
             cv_text(4, 172, &FONT_S, "+ SONIC PI (CC0)", C_DIM);
@@ -138,24 +138,24 @@ static void menu_input(uint32_t pressed)
     s = panel_enc(EN_K1);
     if(ui.menu==5) {enc_drop();return;}
     if(ui.menu>=6) {
-        if(ui.menu==6 && preset_move) my_song_sel=(uint8_t)((my_song_sel+(preset_move>0?1u:4u))%5u);
+        if(ui.menu==6 && preset_move) sf_song_sel=(uint8_t)((sf_song_sel+(preset_move>0?1u:4u))%5u);
         if(ok && ui.menu==6) {
             if(song.playing||transport_req||song.rec||rec_wait||ci_on)ui_message("STOP PLAYBACK FIRST");
-            else if(my_song_sel==4) {my_song_exit();menu_close();studio_open(SC_SONG);}
+            else if(sf_song_sel==4) {sf_song_exit();menu_close();studio_open(SC_SONG);}
             else ui.menu=7;
             ui.force=1;
         } else if(ok && ui.menu==7) {
             if(song.playing||transport_req||song.rec||rec_wait||ci_on)ui_message("STOP PLAYBACK FIRST");
-            else {mycelium_song_load(my_song_sel);menu_close();studio_open(SC_SONG);ui_message("PLAY EPIC SONG");}
+            else {spiralfm1_song_load(sf_song_sel);menu_close();studio_open(SC_SONG);ui_message("PLAY EPIC SONG");}
             ui.force=1;
         }
         enc_drop();return;
     }
     if (ui.menu >= 3) {
         int32_t move = preset_move;
-        if (ui.menu == 3 && move) my_groove_sel = (uint8_t)((my_groove_sel + (move > 0 ? 1u : 6u)) % 7u);
+        if (ui.menu == 3 && move) sf_groove_sel = (uint8_t)((sf_groove_sel + (move > 0 ? 1u : 6u)) % 7u);
         if (ok && ui.menu == 3) {
-            if (my_groove_sel == 6) ui.menu = 1;
+            if (sf_groove_sel == 6) ui.menu = 1;
             else if (song.playing || transport_req || rec_wait || ci_on) ui_message("STOP PLAYBACK FIRST");
             else ui.menu = 4;
             ui.force = 1;
@@ -163,16 +163,16 @@ static void menu_input(uint32_t pressed)
             if (song.playing || transport_req || rec_wait || ci_on) ui_message("STOP PLAYBACK FIRST");
             else {
                 uint32_t i;
-                my_song_exit();
+                sf_song_exit();
                 for (i = 0; i < NTRK; i++) track_defaults(&trk[i]);
                 for (i = 0; i < NPART; i++) {
                     uint32_t e = 1, p = i == 1 ? 21u : 23u;
-                    if (i == 0) e = 0, p = my_groove_sel == 4 ? 17u : 16u;
-                    if (my_groove_sel == 3 && i == 1) e = 0, p = 18u;
-                    if (my_groove_sel == 4 && i == 1) p = 25u;
+                    if (i == 0) e = 0, p = sf_groove_sel == 4 ? 17u : 16u;
+                    if (sf_groove_sel == 3 && i == 1) e = 0, p = 18u;
+                    if (sf_groove_sel == 4 && i == 1) p = 25u;
                     set_engine_of(&trk[i], e); apply_preset_to(&trk[i], p);
                 }
-                TDRUM->p[P_E0] = my_groove_sel == 0 ? MY_DRUM_FOREST : my_groove_sel == 4 ? MY_DRUM_HITECH : MY_DRUM_PSY;
+                TDRUM->p[P_E0] = sf_groove_sel == 0 ? SF_DRUM_FOREST : sf_groove_sel == 4 ? SF_DRUM_HITECH : SF_DRUM_PSY;
                 song.solo = 0;
                 song.g[G_DRLVL] = 100; song.g[G_DRREV] = 12;
                 song.g[G_DUST] = 0; song.g[G_FILT] = 0; song.g[G_ROUTE] = 0; song.g[G_DUCK] = 28;
@@ -181,12 +181,12 @@ static void menu_input(uint32_t pressed)
 #if FELUCCA_ARRANGER
                 arrangement_enabled = 0; live_req = -1; live_sec = -1;
 #endif
-                if (my_groove_sel) {
-                    mycelium_psy_groove(my_groove_sel);
-                    if(my_groove_sel==5) {trk[0].p[P_DIST]=22;trk[0].p[P_LEVEL]=110;}
+                if (sf_groove_sel) {
+                    spiralfm1_psy_groove(sf_groove_sel);
+                    if(sf_groove_sel==5) {trk[0].p[P_DIST]=22;trk[0].p[P_LEVEL]=110;}
                     trk[1].p[P_LEVEL] = 92; trk[2].p[P_LEVEL] = 88;
-                } else mycelium_factory_groove();
-                song.rec = 0; mycelium_start_ready = 1;
+                } else spiralfm1_factory_groove();
+                song.rec = 0; spiralfm1_start_ready = 1;
                 menu_close(); ui_message("PLAY A KEY TO START");
             }
         }
@@ -241,12 +241,12 @@ static void menu_input(uint32_t pressed)
             ui.force = 1;
             break;
         case MI_JAM:
-            ui.menu = 3; my_groove_sel = 1; ui.force = 1;
+            ui.menu = 3; sf_groove_sel = 1; ui.force = 1;
             break;
         case MI_SONGS:
-            ui.menu=6;my_song_sel=0;ui.force=1;break;
+            ui.menu=6;sf_song_sel=0;ui.force=1;break;
         case MI_LOGO:
-            my_fill=0;ui.menu=5;ui.force=1;
+            sf_fill=0;ui.menu=5;ui.force=1;
             break;
         default:
             menu_close();

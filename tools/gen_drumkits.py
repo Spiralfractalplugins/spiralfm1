@@ -367,7 +367,7 @@ KITS = [
 ]
 
 
-# Original Mycelium kits. Existing indices remain intact for saved projects.
+# Original SPIRALFM1 kits. Existing indices remain intact for saved projects.
 KITS += [
     ("PSY KICK", "PSYTRANCE", 0, kit(K909,
         CHH=S(None,260,src="cym",nlev=106,ndec=42,filt=("hp",7600,.18),hpf=6200,level=-3),

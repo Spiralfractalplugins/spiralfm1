@@ -1,4 +1,4 @@
-# MYCELIUM Pages: build the firmware, make the installer + editor site, publish it.
+# SPIRALFM1 Pages: build the firmware, make the installer + editor site, publish it.
 name: pages
 on:
   push:

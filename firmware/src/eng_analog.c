@@ -115,22 +115,22 @@ static const preset_t ANALOG_PRESETS[] = {
     {"WARM PAD", {4, 12, 64, 6, 52, 8, 0, 32}, {75, 90, 115, 90}, 0, 0, FX(0, 55, 20, 55), XP(P_LRATE + 1, 30, P_LD_SHP + 1, 20)},
     {"DARK STR", {0, 18, 64, 0, 48, 6, 0, 32}, {60, 90, 118, 85}, 0, 0, FX(0, 50, 18, 60)},
     {"ATMOS PAD", {4, 25, 64, 20, 60, 15, 0, 32}, {90, 100, 120, 100}, 0, 0, FX(0, 60, 30, 75), XP(P_LRATE + 1, 18, P_LD_PIT + 1, 1)},
-    /* Mycelium: short bass envelopes, resonant squelches and a pitch-drop kick. */
-    {"PSY BASS", {0,0,0,0,46,18,22,0}, {0,62,0,12}, 38, 1, FX(0,0,0,0), XP(P_TRANS+1,-24,P_VOICE+1,V_MONO)},
-    {"HI BASS", {1,0,0,0,46,40,46,110}, {0,26,0,6}, 48, 1, FX(8,0,0,0), XP(P_TRANS+1,-24,P_VOICE+1,V_MONO)},
-    {"GOA ACID", {0,0,0,0,30,118,42,70}, {0,68,42,44}, 82, 1, FX(20,0,24,12), XP(P_GLIDE+1,30,P_TRANS+1,-12,P_LD_FLT+1,20,P_LRATE+1,66)},
-    {"SWAMP SQ", {1,0,20,8,32,120,54,96}, {0,68,24,44}, 106, 1, FX(24,0,30,20), XP(P_LD_FLT+1,42,P_LRATE+1,54)},
-    {"PSY KICK", {3,0,0,0,127,0,30,0}, {0,50,0,8}, 0, 1, FX(8,0,0,0), XP(P_TRANS+1,-24,P_ED_PIT+1,90,P_VOICE+1,V_MONO)},
+    /* SPIRALFM1: short bass envelopes, resonant squelches and a pitch-drop kick (retuned 1.0). */
+    {"PSY BASS", {0,0,0,4,44,24,26,6}, {0,58,2,14}, 44, 1, FX(0,0,0,0), XP(P_TRANS+1,-24,P_VOICE+1,V_MONO)},
+    {"HI BASS", {1,0,0,6,44,44,52,116}, {0,24,0,8}, 52, 1, FX(10,0,0,0), XP(P_TRANS+1,-24,P_VOICE+1,V_MONO)},
+    {"GOA ACID", {0,0,0,3,28,122,48,74}, {0,64,46,46}, 86, 1, FX(20,0,24,12), XP(P_GLIDE+1,34,P_TRANS+1,-12,P_LD_FLT+1,24,P_LRATE+1,58)},
+    {"VORTEX SQ", {1,0,24,10,30,124,60,100}, {0,64,28,46}, 110, 1, FX(26,0,26,24), XP(P_LD_FLT+1,48,P_LRATE+1,46,P_LWAVE+1,2)},
+    {"PSY KICK", {3,0,0,0,127,4,34,0}, {0,46,0,10}, 0, 1, FX(10,0,0,0), XP(P_TRANS+1,-24,P_ED_PIT+1,96,P_VOICE+1,V_MONO)},
     /* MODERN MOTION: original VA sketches after the movement-bass / big-room sound of modern soft synths
      * (Vital, Serum): LFO and pitch-envelope growls, detuned supersaw stacks, risers. Not copied patches. */
-    {"MODERN PLUCK", {0, 30, 64, 0, 60, 28, 26, 58}, {0, 72, 18, 42}, 56, 0, FX(6, 24, 26, 40), XP(P_DETUNE + 1, 70)},
-    {"GROWL VA", {0, 40, 64, 0, 34, 96, 70, 84}, {0, 52, 92, 26}, 62, 1, FX(20, 0, 12, 10), XP(P_LRATE + 1, 52, P_LWAVE + 1, 1, P_LD_FLT + 1, 48, P_TRANS + 1, -24)},
-    {"BIG ROOM LD", {0, 16, 64, 0, 100, 10, 36, 64}, {2, 66, 112, 40}, 14, 1, FX(0, 18, 22, 30), XP(P_VOICE + 1, V_UNISON, P_DETUNE + 1, 56, P_GLIDE + 1, 26)},
-    {"TRANCE RISE", {4, 60, 64, 10, 30, 40, 30, 64}, {0, 100, 120, 60}, 44, 1, FX(0, 0, 30, 55), XP(P_LRATE + 1, 96, P_LWAVE + 1, 2, P_LD_FLT + 1, 56, P_LFADE + 1, 70)},
-    {"DARK MOTION", {0, 52, 64, 0, 42, 60, 60, 48}, {0, 88, 122, 30}, 40, 1, FX(14, 30, 18, 36), XP(P_LRATE + 1, 16, P_LD_SHP + 1, 34, P_TRANS + 1, -12)},
-    {"MIDNIGHT PAD", {4, 84, 64, 8, 46, 12, 0, 24}, {80, 108, 116, 100}, 0, 0, FX(0, 60, 40, 70), XP(P_LRATE + 1, 10, P_LWAVE + 1, 4, P_LD_FLT + 1, 18)},
-    {"VAPOR KEY", {2, 44, 64, 6, 66, 8, 6, 40}, {30, 90, 96, 80}, 0, 0, FX(4, 48, 34, 58), XP(P_LRATE + 1, 34, P_LD_AMP + 1, 14)},
-    {"TECH SNAP", {1, 10, 64, 14, 56, 66, 80, 90}, {0, 48, 60, 18}, 58, 1, FX(30, 0, 8, 8), XP(P_ED_PIT + 1, -24, P_GLIDE + 1, 18, P_TRANS + 1, -12)},
+    {"MODERN PLUCK", {0, 34, 64, 0, 58, 32, 28, 60}, {0, 68, 22, 44}, 58, 0, FX(8, 22, 24, 42), XP(P_DETUNE + 1, 74)},
+    {"GROWL VA", {0, 44, 64, 0, 32, 94, 66, 86}, {0, 50, 96, 28}, 60, 1, FX(20, 0, 10, 12), XP(P_LRATE + 1, 46, P_LWAVE + 1, 2, P_LD_FLT + 1, 42, P_TRANS + 1, -24)},
+    {"BIG ROOM LD", {0, 18, 64, 0, 98, 12, 38, 64}, {2, 64, 114, 42}, 16, 1, FX(0, 20, 20, 32), XP(P_VOICE + 1, V_UNISON, P_DETUNE + 1, 60, P_GLIDE + 1, 28)},
+    {"TRANCE RISE", {4, 64, 64, 10, 28, 42, 32, 64}, {0, 98, 122, 62}, 46, 1, FX(0, 0, 32, 57), XP(P_LRATE + 1, 90, P_LWAVE + 1, 3, P_LD_FLT + 1, 60, P_LFADE + 1, 66)},
+    {"DARK MOTION", {0, 56, 64, 0, 40, 64, 62, 50}, {0, 86, 124, 32}, 42, 1, FX(16, 28, 18, 38), XP(P_LRATE + 1, 14, P_LD_SHP + 1, 38, P_TRANS + 1, -12)},
+    {"MIDNIGHT PAD", {4, 88, 64, 8, 44, 12, 0, 26}, {80, 106, 118, 100}, 0, 0, FX(0, 62, 38, 72), XP(P_LRATE + 1, 12, P_LWAVE + 1, 4, P_LD_FLT + 1, 22)},
+    {"VAPOR KEY", {2, 46, 64, 6, 64, 8, 6, 42}, {30, 88, 98, 82}, 0, 0, FX(4, 50, 32, 60), XP(P_LRATE + 1, 36, P_LD_AMP + 1, 16)},
+    {"TECH SNAP", {1, 12, 64, 14, 54, 70, 82, 92}, {0, 46, 64, 20}, 60, 1, FX(32, 0, 8, 10), XP(P_ED_PIT + 1, -24, P_GLIDE + 1, 20, P_TRANS + 1, -12)},
 };
 
 static const engine_t ENG_ANALOG = {

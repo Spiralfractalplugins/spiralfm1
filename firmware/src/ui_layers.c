@@ -252,7 +252,7 @@ static void layer_key(uint32_t layer, uint32_t k, uint32_t down)
         return;
     }
     case LY_SONG: {                                     /* sections A..D: play, store; loop / song; SONG REC */
-        if(my_song_active()) {ui_message("FACTORY: USE SONG PAGE");return;}
+        if(sf_song_active()) {ui_message("FACTORY: USE SONG PAGE");return;}
         char b[2] = {0, 0};
         if (w < 0)
             return;
@@ -457,7 +457,7 @@ static uint8_t layer_shown;                              /* the screen holds a l
 static void layer_screen_draw(void)
 {
     static uint8_t arp_logo_shown;
-    if(my_arp_logo) {if(!arp_logo_shown||ui.force){sloop_splash();ui.force=0;}arp_logo_shown=1;layer_shown=1;return;}
+    if(sf_arp_logo) {if(!arp_logo_shown||ui.force){sloop_splash();ui.force=0;}arp_logo_shown=1;layer_shown=1;return;}
     if(arp_logo_shown) {arp_logo_shown=0;layer_shown=0;ui.force=1;}
     static uint32_t head, tiles, foot;
     static tile_t tl[16];

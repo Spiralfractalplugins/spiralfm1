@@ -1,0 +1,141 @@
+{
+  "design": "SPIRALFM1 procedural drum collection (retuned from the Mycelium base set)",
+  "audio_inputs": [],
+  "assets": [
+    {
+      "file": "PSY-KICK.wav",
+      "role": "KICK",
+      "kit_name": "PSY",
+      "sr": 44100,
+      "duration": 0.3,
+      "sha256": "74938a061645845e8b066824b1f94b49c401935f26954824d9f464082eeb68f8",
+      "source": "Original procedural synthesis: tools/gen_spiral_drums.py; no external audio input"
+    },
+    {
+      "file": "PSY-HAT.wav",
+      "role": "HAT",
+      "kit_name": "PSY",
+      "sr": 44100,
+      "duration": 0.11498866213151927,
+      "sha256": "b3247ec836f78a63ed49e9158cbf4babca0f63887af06897408634bda65664ec",
+      "source": "Original procedural synthesis: tools/gen_spiral_drums.py; no external audio input"
+    },
+    {
+      "file": "PSY-CLAP.wav",
+      "role": "CLAP",
+      "kit_name": "PSY",
+      "sr": 44100,
+      "duration": 0.16,
+      "sha256": "a0728ff9a8ff4c36a7c690b315028a8832157574637f1351e66004217e40e586",
+      "source": "Original procedural synthesis: tools/gen_spiral_drums.py; no external audio input"
+    },
+    {
+      "file": "PSY-PERC.wav",
+      "role": "PERC",
+      "kit_name": "PSY",
+      "sr": 44100,
+      "duration": 0.14,
+      "sha256": "a34262ddfdaf7e8f37162b601d76441c35cf53e26e0ae42a621f40880028d01b",
+      "source": "Original procedural synthesis: tools/gen_spiral_drums.py; no external audio input"
+    },
+    {
+      "file": "PSY-SNARE.wav",
+      "role": "SNARE",
+      "kit_name": "PSY",
+      "sr": 44100,
+      "duration": 0.15,
+      "sha256": "8a6f7123a6778e1acfdcb1df911f915b2f35a5454fc42d2a28d66bc30dc600bf",
+      "source": "Original procedural synthesis: tools/gen_spiral_drums.py; no external audio input"
+    },
+    {
+      "file": "FOREST-KICK.wav",
+      "role": "KICK",
+      "kit_name": "FOREST",
+      "sr": 44100,
+      "duration": 0.3,
+      "sha256": "35d4c4886db42662f0fd81ef7dc7481a1db326797a51379afe7cc6270811f627",
+      "source": "Original procedural synthesis: tools/gen_spiral_drums.py; no external audio input"
+    },
+    {
+      "file": "FOREST-HAT.wav",
+      "role": "HAT",
+      "kit_name": "FOREST",
+      "sr": 44100,
+      "duration": 0.11498866213151927,
+      "sha256": "65aedb7cf74582c9d55980afeeefe1503c83a173e14b44e229f2a86e1e2ac55d",
+      "source": "Original procedural synthesis: tools/gen_spiral_drums.py; no external audio input"
+    },
+    {
+      "file": "FOREST-CLAP.wav",
+      "role": "CLAP",
+      "kit_name": "FOREST",
+      "sr": 44100,
+      "duration": 0.16,
+      "sha256": "5632a456b5011f7f039c9a499aac14ad10ec55bcf3c1e426cfc625daa2f13585",
+      "source": "Original procedural synthesis: tools/gen_spiral_drums.py; no external audio input"
+    },
+    {
+      "file": "FOREST-PERC.wav",
+      "role": "PERC",
+      "kit_name": "FOREST",
+      "sr": 44100,
+      "duration": 0.14,
+      "sha256": "f19f27c8502cb93e25a9575df399f49e1e0e12328e4de8927786d4ef02606de7",
+      "source": "Original procedural synthesis: tools/gen_spiral_drums.py; no external audio input"
+    },
+    {
+      "file": "FOREST-SNARE.wav",
+      "role": "SNARE",
+      "kit_name": "FOREST",
+      "sr": 44100,
+      "duration": 0.15,
+      "sha256": "4194f4e405d96a439a57b9287d12a32d2b5dbc08dc4a8c699b8db4672c858ab2",
+      "source": "Original procedural synthesis: tools/gen_spiral_drums.py; no external audio input"
+    },
+    {
+      "file": "HITECH-KICK.wav",
+      "role": "KICK",
+      "kit_name": "HITECH",
+      "sr": 44100,
+      "duration": 0.3,
+      "sha256": "4e24bac5a3b3d840c293dacd9d19993cb8aa2a27ac3bf012899bd9fde237e674",
+      "source": "Original procedural synthesis: tools/gen_spiral_drums.py; no external audio input"
+    },
+    {
+      "file": "HITECH-HAT.wav",
+      "role": "HAT",
+      "kit_name": "HITECH",
+      "sr": 44100,
+      "duration": 0.11498866213151927,
+      "sha256": "db766161b3443d38c48a10473b457def3950c07baab0443d68bbc40e93b5e73a",
+      "source": "Original procedural synthesis: tools/gen_spiral_drums.py; no external audio input"
+    },
+    {
+      "file": "HITECH-CLAP.wav",
+      "role": "CLAP",
+      "kit_name": "HITECH",
+      "sr": 44100,
+      "duration": 0.16,
+      "sha256": "ce15ea4f5851fee7bc24e18e46dd463de45c827e882f18b7cdc9778cd4cc888e",
+      "source": "Original procedural synthesis: tools/gen_spiral_drums.py; no external audio input"
+    },
+    {
+      "file": "HITECH-PERC.wav",
+      "role": "PERC",
+      "kit_name": "HITECH",
+      "sr": 44100,
+      "duration": 0.14,
+      "sha256": "8b98b825a8bfe5be9dabe6915f2b8e7861753d9ce813f10a0f7be552b06b96e8",
+      "source": "Original procedural synthesis: tools/gen_spiral_drums.py; no external audio input"
+    },
+    {
+      "file": "HITECH-SNARE.wav",
+      "role": "SNARE",
+      "kit_name": "HITECH",
+      "sr": 44100,
+      "duration": 0.15,
+      "sha256": "65757e8a87b0489574164b53b5af7d4530e0dd59e27d23602aaa1330908f0bea",
+      "source": "Original procedural synthesis: tools/gen_spiral_drums.py; no external audio input"
+    }
+  ]
+}

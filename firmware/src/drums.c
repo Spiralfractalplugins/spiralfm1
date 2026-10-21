@@ -15,15 +15,15 @@
 static const char *const DRUM_KIT_NAMES[] = {"ACOUSTIC", "DEEP", "TIGHT", "BRIGHT", "DUST", DS_KIT_NAME_LIST};
 static const char *const DRUM_KIT_STYLES[] = {"STUDIO", "SOFT", "PUNCHY", "BRIGHT", "DUSTY", DS_KIT_STYLE_LIST};
 static uint32_t drum_kit(void) { return (uint32_t)clamp(TDRUM->p[P_E0], 0, DRUM_KITS - 1); }
-#define MY_DRUM_PSY (DRUM_SAMPLED + 32u)
-#define MY_DRUM_FOREST (DRUM_SAMPLED + 33u)
-#define MY_DRUM_HITECH (DRUM_SAMPLED + 34u)
-#define DRUM_DEFAULT_KIT MY_DRUM_PSY
-static void mycelium_drum_step(int32_t step)
+#define SF_DRUM_PSY (DRUM_SAMPLED + 32u)
+#define SF_DRUM_FOREST (DRUM_SAMPLED + 33u)
+#define SF_DRUM_HITECH (DRUM_SAMPLED + 34u)
+#define DRUM_DEFAULT_KIT SF_DRUM_PSY
+static void spiralfm1_drum_step(int32_t step)
 {
-    uint32_t k = drum_kit(), pos = k == MY_DRUM_FOREST ? 1u : k == MY_DRUM_HITECH ? 2u : 0u;
+    uint32_t k = drum_kit(), pos = k == SF_DRUM_FOREST ? 1u : k == SF_DRUM_HITECH ? 2u : 0u;
     pos = (pos + (step > 0 ? 1u : 2u)) % 3u;
-    TDRUM->p[P_E0] = (int16_t)(MY_DRUM_PSY + pos);
+    TDRUM->p[P_E0] = (int16_t)(SF_DRUM_PSY + pos);
 }
 
 static struct {
@@ -43,8 +43,8 @@ static struct {
 
 static int32_t ds_buf[CTL];
 /* Shared dry low-end bus: part 1 and the kick voices. */
-static int32_t my_kb_l[CTL], my_kb_r[CTL];
-static uint8_t my_kb_active;
+static int32_t sf_kb_l[CTL], sf_kb_r[CTL];
+static uint8_t sf_kb_active;
 
 static int32_t drum_set(void)
 {
@@ -130,13 +130,13 @@ static uint32_t vel_lvl(uint32_t vel)
 }
 
 static int32_t env_tick(track_t *t, voice_t *v);
-static void my_kick_env_on(voice_t *v)
+static void sf_kick_env_on(voice_t *v)
 {
     v->env=TDRUM->p[P_ATK]?0:(1<<24);v->env_out=v->env>>9;
     v->stage=TDRUM->p[P_ATK]?1:2;
     v->ph[2]=(FS*60u*(uint32_t)TDRUM->p[P_SGATE])/((uint32_t)clamp(song.g[G_BPM],40,240)*128u);
 }
-static int32_t my_kick_env_tick(voice_t *v,uint32_t n)
+static int32_t sf_kick_env_tick(voice_t *v,uint32_t n)
 {
     if(!TDRUM->p[P_ED_FX] || (v->note!=35u && v->note!=36u))return -1;
     if(v->ph[2]>n)v->ph[2]-=n;else {v->ph[2]=0;v->stage=3;}
@@ -148,10 +148,10 @@ static void drum_on(uint32_t note, uint32_t vel)
     const smp_set_t *set;
     voice_t *v = &drums.v[0];
     uint32_t i, zi = 0xFFFFu, kit = drum_kit();
-    uint32_t mykick = kit >= MY_DRUM_PSY && kit <= MY_DRUM_HITECH && (note == 35u || note == 36u);
+    uint32_t mykick = kit >= SF_DRUM_PSY && kit <= SF_DRUM_HITECH && (note == 35u || note == 36u);
     uint32_t myzone=0xFFFFu;
-    for(i=0;i<sizeof(MYCELIUM_DRUM_ZONES)/sizeof(MYCELIUM_DRUM_ZONES[0]);i++)
-        if(kit==DRUM_SAMPLED+MYCELIUM_DRUM_ZONES[i].kit && note==MYCELIUM_DRUM_ZONES[i].note)myzone=MYCELIUM_DRUM_ZONES[i].zone;
+    for(i=0;i<sizeof(SPIRALFM1_DRUM_ZONES)/sizeof(SPIRALFM1_DRUM_ZONES[0]);i++)
+        if(kit==DRUM_SAMPLED+SPIRALFM1_DRUM_ZONES[i].kit && note==SPIRALFM1_DRUM_ZONES[i].note)myzone=SPIRALFM1_DRUM_ZONES[i].zone;
     if (note != 76u && note != 77u)                 /* the pads and key LEDs (not the click's wood block) */
         drums.hits |= (uint16_t)(1u << lane_of_note(note));
     if (note == 35u || note == 36u)
@@ -177,7 +177,7 @@ static void drum_on(uint32_t note, uint32_t vel)
         v->note = (uint8_t)note;
         v->vel = (uint8_t)vel;
         v->active = 1;
-        my_kick_env_on(v);
+        sf_kick_env_on(v);
         v->s[7] = 0;
         v->age = ++drums.age;
         drums.synth[i] = 1;
@@ -192,7 +192,7 @@ static void drum_on(uint32_t note, uint32_t vel)
         if (note >= SMP_ZONES[set->z0 + i].lo && note <= SMP_ZONES[set->z0 + i].hi)
             zi = set->z0 + i;
     if(myzone!=0xFFFFu)zi=myzone;
-    else if (mykick) zi = MYCELIUM_KICK_ZONE;
+    else if (mykick) zi = SPIRALFM1_KICK_ZONE;
     if (zi == 0xFFFFu)
         return;
     if (note == 42u || note == 44u)                 /* hi-hat choke */
@@ -214,7 +214,7 @@ static void drum_on(uint32_t note, uint32_t vel)
     v->note = (uint8_t)note;
     v->vel = (uint8_t)vel;
     v->active = 1;
-    my_kick_env_on(v);
+    sf_kick_env_on(v);
     v->s[7] = 0;
     v->age = ++drums.age;
     v->s[4] = (int32_t)zi;
@@ -235,7 +235,7 @@ static void drum_on(uint32_t note, uint32_t vel)
 
 /* adds the drums into the dry mix and the reverb send; mono != 0: into mono instead, before the
  * pan and the send (the SLICER, slicer.c slicer_drums, does those after it) */
-static inline int32_t my_drum_dist(int32_t s) {
+static inline int32_t sf_drum_dist(int32_t s) {
     int32_t d=clamp(TDRUM->p[P_DIST],0,127),g,x,y;
     if(!d)return s;
     g=4096+d*d*2;
@@ -263,23 +263,23 @@ static inline void drums_mix(int32_t *ml, int32_t *mr, int32_t *rev, int32_t *mo
         int32_t e0,e1;
         if (!v->active || !drums.synth[k])
             continue;
-        e0=v->env_out;e1=my_kick_env_tick(v,m);
+        e0=v->env_out;e1=sf_kick_env_tick(v,m);
         if (!ds_render(&drums.ds[k], ds_buf, m))
             v->active = 0;
         for (i = 0; i < m; i++) {
             int32_t s = mulq15(ds_buf[i], mulq15(lvl, 32767 - drums.a0 - (((drums.a1 - drums.a0) * (int32_t)i) >> CTL_LOG2)));
             if(e1>=0)s=mulq15(s,e0+(((e1-e0)*(int32_t)i)>>CTL_LOG2));
-            s=my_drum_dist(s);
+            s=sf_drum_dist(s);
             v->s[7] = s;
             if (s > pk || -s > pk)
                 pk = s < 0 ? -s : s;
             if (mono) {
-                if(my_kb_active && (v->note==35u || v->note==36u)) {my_kb_l[i]+=s;my_kb_r[i]+=s;}
+                if(sf_kb_active && (v->note==35u || v->note==36u)) {sf_kb_l[i]+=s;sf_kb_r[i]+=s;}
                 else mono[i] += s;
                 continue;
             }
-            if (my_kb_active && (v->note == 35u || v->note == 36u)) {
-                my_kb_l[i] += (s * gl) >> 12; my_kb_r[i] += (s * gr) >> 12;
+            if (sf_kb_active && (v->note == 35u || v->note == 36u)) {
+                sf_kb_l[i] += (s * gl) >> 12; sf_kb_r[i] += (s * gr) >> 12;
             } else {
                 ml[i] += (s * gl) >> 12; mr[i] += (s * gr) >> 12;
             }
@@ -300,7 +300,7 @@ static inline void drums_mix(int32_t *ml, int32_t *mr, int32_t *rev, int32_t *mo
         int32_t g,e0,e1;
         if (!v->active)
             continue;
-        e0=v->env_out;e1=my_kick_env_tick(v,n);
+        e0=v->env_out;e1=sf_kick_env_tick(v,n);
         g = mulq15(lvl, v->vel * 258);
         g += g * 3 >> 2;                           /* x1.75 (+5 dB): as loud as the synthesised kits */
         for (i = 0; i < n; i++) {
@@ -329,17 +329,17 @@ static inline void drums_mix(int32_t *ml, int32_t *mr, int32_t *rev, int32_t *mo
                 drums.env[k] -= (drums.env[k] >> 11) + 1;
                 if (drums.env[k] <= 0) v->active = 0;
             }
-            s=my_drum_dist(s);
+            s=sf_drum_dist(s);
             v->s[7] = s;
             if (s > pk || -s > pk)
                 pk = s < 0 ? -s : s;
             if (mono) {
-                if(my_kb_active && (v->note==35u || v->note==36u)) {my_kb_l[i]+=s;my_kb_r[i]+=s;}
+                if(sf_kb_active && (v->note==35u || v->note==36u)) {sf_kb_l[i]+=s;sf_kb_r[i]+=s;}
                 else mono[i] += s;
                 continue;
             }
-            if (my_kb_active && (v->note == 35u || v->note == 36u)) {
-                my_kb_l[i] += (s * gl) >> 12; my_kb_r[i] += (s * gr) >> 12;
+            if (sf_kb_active && (v->note == 35u || v->note == 36u)) {
+                sf_kb_l[i] += (s * gl) >> 12; sf_kb_r[i] += (s * gr) >> 12;
             } else {
                 ml[i] += (s * gl) >> 12; mr[i] += (s * gr) >> 12;
             }

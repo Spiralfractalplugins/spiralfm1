@@ -342,21 +342,21 @@ class Builder:
         self.sets.append(("PERC", z0, len(self.zones) - z0))
         self.kinds["PERC"] = "kit"
 
-    def mycelium_kick(self):
-        # Original procedural Forest kick, embedded only for the Mycelium kick lanes.
-        sr, x = read_any_wav(SRC / "assets/mycelium/samples/FOREST-KICK.wav")
+    def spiralfm1_kick(self):
+        # Original procedural Forest kick, embedded only for the SPIRALFM1 kick lanes.
+        sr, x = read_any_wav(SRC / "assets/spiralfm1/samples/FOREST-KICK.wav")
         x = resample(x, sr, 44100)
         pk = max(map(abs, x))
         assert pk > 0 and len(x) < 44100 * 3
         x = [int(round(v * (.70 * 32767) / pk)) for v in x]
         off, st = self.add(x, len(x))
-        self.my_kick_zone = len(self.zones)
+        self.sf_kick_zone = len(self.zones)
         self.zones.append(dict(off=off,n=len(x),ls=len(x),le=len(x),looped=False,
                                sr=44100,root16=36*16,pred=st[0],idx=st[1],lo=35,hi=36))
 
-    def mycelium_drums(self):
-        base=SRC / "assets/mycelium/samples"
-        self.my_drum_zones=[]
+    def spiralfm1_drums(self):
+        base=SRC / "assets/spiralfm1/samples"
+        self.sf_drum_zones=[]
         for e in json.loads((base / "DRUM-SOURCES.json").read_text())["entries"]:
             rate=22050 if e["role"]=="KICK" else 16000
             keep=.30 if e["role"]=="KICK" else {"HAT":.12,"CLAP":.16,"PERC":.14,"SNARE":.14}[e["role"]]
@@ -370,8 +370,8 @@ class Builder:
             off,st=self.add(x,len(x));zone=len(self.zones);note=e["note"]
             self.zones.append(dict(off=off,n=len(x),ls=len(x),le=len(x),looped=False,sr=rate,
                                    root16=note*16,pred=st[0],idx=st[1],lo=note,hi=note))
-            self.my_drum_zones.append((e["kit"],note,zone))
-            if e["role"]=="KICK":self.my_drum_zones.append((e["kit"],35,zone))
+            self.sf_drum_zones.append((e["kit"],note,zone))
+            if e["role"]=="KICK":self.sf_drum_zones.append((e["kit"],35,zone))
 
     def cc0_set(self, name, kind):
         entries = []
@@ -408,9 +408,9 @@ class Builder:
             L.append('    {"NONE", 0, 1},')
         L.append("};")
         L.append(f"#define SMP_NSETS {max(1, len(sets))}")
-        L.append(f"#define MYCELIUM_KICK_ZONE {self.my_kick_zone}u")
-        L.append("static const struct { uint8_t kit,note; uint16_t zone; } MYCELIUM_DRUM_ZONES[] = {")
-        for kit,note,zone in self.my_drum_zones:L.append(f"    {{{kit},{note},{zone}}},")
+        L.append(f"#define SPIRALFM1_KICK_ZONE {self.sf_kick_zone}u")
+        L.append("static const struct { uint8_t kit,note; uint16_t zone; } SPIRALFM1_DRUM_ZONES[] = {")
+        for kit,note,zone in self.sf_drum_zones:L.append(f"    {{{kit},{note},{zone}}},")
         L.append("};")
         L.append("static const preset_t SMP_PRESET_TABLE[] = {")
         named = sets or [("NONE", 0, 0)]
@@ -467,8 +467,8 @@ def input_key(have_cc0):
     for p in (here / "gen_samples.py", here / "sampleio.py"):
         h.update(p.read_bytes())
     h.update(repr((sys.version_info[:2], have_cc0, os.environ.get("FELUCCA_SLICE") == "1")).encode())   # sum() differs across versions
-    files = sorted(GENDIR.glob("*.wav")) + sorted((SRC / "assets/mycelium/samples").glob("*.wav"))
-    h.update((SRC / "assets/mycelium/samples/DRUM-SOURCES.json").read_bytes())
+    files = sorted(GENDIR.glob("*.wav")) + sorted((SRC / "assets/spiralfm1/samples").glob("*.wav"))
+    h.update((SRC / "assets/spiralfm1/samples/DRUM-SOURCES.json").read_bytes())
     if have_cc0:
         files += sorted(CC0.glob("*/*.wav"))
     for p in files:
@@ -497,8 +497,8 @@ def main(out):
             if kind != "kit":                       # the CC0 KIT feeds the GM kit
                 b.cc0_set(name, kind)
     b.gm_kit(have_cc0)
-    b.mycelium_kick()
-    b.mycelium_drums()
+    b.spiralfm1_kick()
+    b.spiralfm1_drums()
     if os.environ.get("FELUCCA_SLICE") == "1":       # SLICE's BREAK: only when that engine is built
         b.slice_break()                             # last: the sets' offsets stay as they were
     text = b.header()

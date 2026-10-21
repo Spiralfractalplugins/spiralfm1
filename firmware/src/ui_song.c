@@ -34,7 +34,7 @@ static void song_screen_draw(void)
     /* Draw one small band at a time: never exceed the 124-row canvas. */
     cv_begin(240, 40, C_BLACK);
     cv_text(4, 4, &FONT_L, "SONG", C_WHITE);
-    cv_text(4, 20, &FONT_S, my_song_active()?MY_SONG_NAMES[arrangement.reserved[1]-1u]:"USER SONG", arrangement_enabled ? SC[3] : RGB(118, 118, 126));
+    cv_text(4, 20, &FONT_S, sf_song_active()?SF_SONG_NAMES[arrangement.reserved[1]-1u]:"USER SONG", arrangement_enabled ? SC[3] : RGB(118, 118, 126));
     fmt_int(b, song.g[G_BPM]);
     cv_text(236 - text_w(&FONT_S, b) - 28, 4, &FONT_S, b, C_WHITE);
     cv_text(236 - 24, 4, &FONT_S, "bpm", RGB(118, 118, 126));
@@ -47,7 +47,7 @@ static void song_screen_draw(void)
         cv_begin(240, 26, C_BLACK);
         if (pos < arrangement.count) {
             const arr_entry_t *e = &arrangement.entry[pos];
-        int selected = pos == song_cursor, used = my_song_active() || project_used(e->scene);
+        int selected = pos == song_cursor, used = sf_song_active() || project_used(e->scene);
             uint16_t sc = SC[e->scene & 3u];
             int32_t w;
             fmt_int(b, (int32_t)pos + 1);
@@ -117,7 +117,7 @@ static void song_screen_input(uint32_t pressed, uint32_t home)
             } else if (b == B_OCTUP) {                   /* load: a second press within 3 s (unsaved work goes) */
                 if (song_load_armed && (int32_t)(fm1_ms - song_store_deadline) <= 0) {
                     song_load_armed = 0;
-                    if(my_song_active()) {arrangement_clock.index=song_cursor;fm1_irq_off();my_song_apply(scene);fm1_irq_on();}
+                    if(sf_song_active()) {arrangement_clock.index=song_cursor;fm1_irq_off();sf_song_apply(scene);fm1_irq_on();}
                     else project_load(scene);
                 } else {
                     song_load_armed = 1;
@@ -125,7 +125,7 @@ static void song_screen_input(uint32_t pressed, uint32_t home)
                     song_store_deadline = fm1_ms + 3000u;
                     ui_message("OCT+ AGAIN: LOAD");
                 }
-            } else if(my_song_active()) { ui_message("FACTORY: READ ONLY");
+            } else if(sf_song_active()) { ui_message("FACTORY: READ ONLY");
             } else if (project_used(scene) &&
                        (!song_store_armed || (int32_t)(fm1_ms - song_store_deadline) > 0)) {
                 song_store_armed = 1;
@@ -147,7 +147,7 @@ static void song_screen_input(uint32_t pressed, uint32_t home)
             song_cursor = (uint8_t)clamp(song_cursor + steps, 0, arrangement.count - 1);
             continue;
         }
-        if(my_song_active()) {ui_message("FACTORY: READ ONLY");continue;}
+        if(sf_song_active()) {ui_message("FACTORY: READ ONLY");continue;}
         if (song.playing || transport_req) { ui_message("STOP FIRST"); continue; }
         if (k == 1) arrangement.entry[song_cursor].scene = (uint8_t)clamp(arrangement.entry[song_cursor].scene + steps, 0, 3);
         if (k == 2) arrangement.entry[song_cursor].bars = (uint8_t)clamp(arrangement.entry[song_cursor].bars + steps, 1, 64);
@@ -160,6 +160,6 @@ static void song_screen_input(uint32_t pressed, uint32_t home)
     panel_enc(EN_SELECT); panel_enc(EN_ALGO);
     if(panel_enc(EN_PRESET)) {
         if(song.playing||transport_req||song.rec||rec_wait||ci_on)ui_message("STOP FIRST");
-        else my_song_picker();
+        else sf_song_picker();
     }
 }

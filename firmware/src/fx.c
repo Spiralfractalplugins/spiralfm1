@@ -438,42 +438,42 @@ static void djf_process(int32_t *l, int32_t *r, uint32_t n)
 }
 
 #include "punch.c"            /* PUNCH-IN FX on the whole mix (FX held + a white key) */
-enum { MY_KB_RESO = 25 }; /* 20% of the 0..127 resonance range, rounded */
-static struct { int32_t cut, l1, l2, r1, r2; } my_kbf = {127 << 8,0,0,0,0};
-static void my_kb_process(uint32_t n)
+enum { SF_KB_RESO = 25 }; /* 20% of the 0..127 resonance range, rounded */
+static struct { int32_t cut, l1, l2, r1, r2; } sf_kbf = {127 << 8,0,0,0,0};
+static void sf_kb_process(uint32_t n)
 {
     uint32_t i;
     int32_t amount=clamp(song.g[G_ROUTE],0,127), target=(127-amount*117/127)<<8;
     int32_t drive=clamp(song.g[G_ENGGO],0,127), blend=drive*258;
     tsvf_t c;
-    my_kbf.cut += clamp(target-my_kbf.cut,-384,384);
-    tsvf_coef(&c,my_kbf.cut,MY_KB_RESO);
+    sf_kbf.cut += clamp(target-sf_kbf.cut,-384,384);
+    tsvf_coef(&c,sf_kbf.cut,SF_KB_RESO);
     for(i=0;i<n;i++) {
-        int32_t l=clamp(my_kb_l[i],-140000,140000),r=clamp(my_kb_r[i],-140000,140000);
+        int32_t l=clamp(sf_kb_l[i],-140000,140000),r=clamp(sf_kb_r[i],-140000,140000);
         /* DRIVE: clean to 3x soft saturation, before LP so new harmonics are filtered. */
         if(drive) {
             l+=mulq15(softclip(l+l*drive*2/127)-l,blend);
             r+=mulq15(softclip(r+r*drive*2/127)-r,blend);
         }
-        my_kb_l[i]=tsvf_lp(&c,l,&my_kbf.l1,&my_kbf.l2);
-        my_kb_r[i]=tsvf_lp(&c,r,&my_kbf.r1,&my_kbf.r2);
+        sf_kb_l[i]=tsvf_lp(&c,l,&sf_kbf.l1,&sf_kbf.l2);
+        sf_kb_r[i]=tsvf_lp(&c,r,&sf_kbf.r1,&sf_kbf.r2);
     }
 }
 static int32_t master_cur = -1;                        /* the volume knob, ramped per sample (no zipper) */
-static uint32_t my_alien_phase;
-static int32_t my_alien_amount;
-static void my_alien_process(uint32_t n)
+static uint32_t sf_alien_phase;
+static int32_t sf_alien_amount;
+static void sf_alien_process(uint32_t n)
 {
     uint32_t i, hz, inc;
     int32_t target=clamp(song.g[G_NAME],0,127)<<8;
-    my_alien_amount+=clamp(target-my_alien_amount,-128,128);
-    if (!my_alien_amount) return;
-    hz=60u+(uint32_t)(my_alien_amount>>8)*(uint32_t)(my_alien_amount>>8)*2340u/(127u*127u);
+    sf_alien_amount+=clamp(target-sf_alien_amount,-128,128);
+    if (!sf_alien_amount) return;
+    hz=60u+(uint32_t)(sf_alien_amount>>8)*(uint32_t)(sf_alien_amount>>8)*2340u/(127u*127u);
     inc=hz*97392u; /* 2^32 / 44100; continuous phase, 60..2400 Hz */
     for(i=0;i<n;i++) {
-        int32_t carrier, blend=my_alien_amount;
+        int32_t carrier, blend=sf_alien_amount;
         int32_t l=clamp(mix_l[i],-140000,140000),r=clamp(mix_r[i],-140000,140000);
-        my_alien_phase+=inc;carrier=sine_i(my_alien_phase);
+        sf_alien_phase+=inc;carrier=sine_i(sf_alien_phase);
         mix_l[i]=l+(mulq15((mulq15(l>>3,carrier)*8-l)>>3,blend)*8);
         mix_r[i]=r+(mulq15((mulq15(r>>3,carrier)*8-r)>>3,blend)*8);
     }
@@ -483,24 +483,24 @@ static void mix_block(int32_t *out, uint32_t n)
     uint32_t i;
     int32_t m0, m1;
     for (i = 0; i < n; i++)
-        send_c[i] = send_d[i] = send_r[i] = mix_l[i] = mix_r[i] = my_kb_l[i] = my_kb_r[i] = 0;
+        send_c[i] = send_d[i] = send_r[i] = mix_l[i] = mix_r[i] = sf_kb_l[i] = sf_kb_r[i] = 0;
     events_block(n);
     duck_block(n * (uint32_t)song.g[G_BPM]);
     mix_part(&trk[0], n);
-    for(i=0;i<n;i++) {my_kb_l[i]=mix_l[i];my_kb_r[i]=mix_r[i];mix_l[i]=mix_r[i]=0;}
+    for(i=0;i<n;i++) {sf_kb_l[i]=mix_l[i];sf_kb_r[i]=mix_r[i];mix_l[i]=mix_r[i]=0;}
     for (i = 1; i < NPART; i++)
         mix_part(&trk[i], n);
-    my_alien_process(n); /* only lead/FX dry mix, before drums and the separate kick/bass bus */
+    sf_alien_process(n); /* only lead/FX dry mix, before drums and the separate kick/bass bus */
     drums.a0 = TDRUM->att;                              /* the drum track's mute / solo fade */
     drums.a1 = 32767 - gain_next(TDRUM);
-    my_kb_active=1;
+    sf_kb_active=1;
     slicer_drums(mix_l, mix_r, send_r, n);              /* kick remains on the low-end bus even during drum slicing */
-    my_kb_active=0;
-    my_kb_process(n);
+    sf_kb_active=0;
+    sf_kb_process(n);
     fx_buses(send_c, send_d, send_r, wet_l, wet_r, n);
     for (i = 0; i < n; i++) {
-        mix_l[i] += my_kb_l[i] + wet_l[i];
-        mix_r[i] += my_kb_r[i] + wet_r[i];
+        mix_l[i] += sf_kb_l[i] + wet_l[i];
+        mix_r[i] += sf_kb_r[i] + wet_r[i];
     }
     dust_process(mix_l, mix_r, n);
     punch_process(mix_l, mix_r, n);

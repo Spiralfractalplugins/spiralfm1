@@ -1,12 +1,14 @@
 # SPIRALFM1 — запуск веб-установщика
 
-Прошивка ставится из браузера: страница отдаёт пакет `.fwsc`, общается с FM-1 по Web MIDI /
-Web Serial, держит устройство в boot-режиме и пишет загрузчик вместе с приложением. Тот же
-сайт работает и с твоей локальной сборки — ничего на GitHub публиковать не обязательно.
+Прошивка ставится из браузера: страница отдаёт пакет `.fwsc`, говорит с FM-1 по **Web MIDI c SysEx**
+(`requestMIDIAccess({ sysex: true })`), держит устройство в boot-режиме и пишет загрузчик вместе с
+приложением. Тот же сайт работает и с твоей локальной сборки — ничего на GitHub публиковать не
+обязательно.
 
-Нужно: **Chrome или Edge** (Web Serial нет в Safari и Firefox), USB-кабель с данными, без хаба.
-На FM-1 при нажатии **Install** держи **POWER → B1**. Перед установкой сделай резервную копию
-в [редакторе](#редактор) — Projects → Backup.
+Нужно: **Chrome или Edge** (Web MIDI с SysEx в Safari и Firefox не поддержан), USB-кабель с данными,
+без хаба, и чтобы ни одно другое приложение или вкладка не держали MIDI — иначе страница пишет
+`FM-1 not found`. На FM-1 при нажатии **Install** держи **POWER → B1**. Перед установкой сделай
+резервную копию в [редакторе](#редактор) — Projects → Backup.
 
 ## Локально
 
@@ -42,8 +44,11 @@ site/firmware/spiralfm1-ВЕР.fwsc   сам пакет
 
 Важные мелочи:
 
-- Открывай **`localhost`**, а не `127.0.0.1` и не IP-адрес: Web MIDI и Web Serial доступны только в
-  secure context, а `localhost` исключение из правил. Нужен HTTPS — `mkcert` или GitHub Pages.
+- Открывай **`localhost`**, а не `127.0.0.1` и не IP-адрес: Web MIDI доступен только в secure
+  context, а `localhost` — исключение из правил. Для любого другого хоста нужен HTTPS (`mkcert` или
+  GitHub Pages).
+- Если страница отвечает `MIDI (SysEx) access was not allowed` — разреши MIDI для этого сайта в
+  настройках адреса в адресной строке Chrome и нажми Install снова.
 - Сервер должен отдавать **весь** каталог `site/`: путь к пакету на странице относительный
   (`../../firmware/…`), поэтому `python3 -m http.server` внутри `site/webapp/installer/` не найдёт
   `.fwsc`.
@@ -54,9 +59,9 @@ site/firmware/spiralfm1-ВЕР.fwsc   сам пакет
 
 `http://localhost:8000/webapp/editor/` (или `https://spiralfractalplugins.github.io/spiralfm1/webapp/editor/`):
 **Connect**, и редактор следует за устройством вживую — крутишь ручку на FM-1, в редакторе едет.
-Сообщения SysEx и формат бэкапа — [web/EDITOR_PROTOCOL.md](EDITOR_PROTOCOL.md). Без разрешённого
-доступа к MIDI (кнопка Connect в Chrome) редактор покажет `SPIRALFM1 not found` — это значит, что порт
-ещё не выбран или устройство не в том режиме.
+Сообщения SysEx и формат бэкапа — [web/EDITOR_PROTOCOL.md](EDITOR_PROTOCOL.md). Если после Connect
+пишет `SPIRALFM1 not found` — Chrome не дал доступ к MIDI (разреши в настройках сайта в адресной
+строке), устройство не подключено, или MIDI-порт уже занят другим приложением или вкладкой.
 
 ## На GitHub Pages
 

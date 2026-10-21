@@ -78,8 +78,9 @@ python3 -m http.server 8765 --directory site            # serve it locally
 
 ### Open items
 
-- **Nothing is pushed.** The Studio work is local only: no commit, no push, no Pages deploy (the
-  user asked for that explicitly for this session).
+- **The Studio is live.** Commits `7479519` (the studio) and `5aea70e` (the workflow fix); CI
+  green; the site at <https://spiralfractalplugins.github.io/spiralfm1/webapp/studio/> serves the
+  engine (verified in a browser against the live URL).
 - `site/` is a build output and is now in `.gitignore`; it must never be committed.
 - The Studio has no MIDI output, no project save/load and no preset export (only the language
   choice is kept in `localStorage`). It is a player and a sequence editor, not a replacement for
@@ -90,6 +91,30 @@ python3 -m http.server 8765 --directory site            # serve it locally
 ---
 
 ## Session log
+
+### 2026-10-21 — Push: the studio goes live, and the workflows learn to speak YAML
+
+- **Task.** Commit the studio, push it, and make sure the CI and the Pages deploy survive it.
+- **Agents.** Main agent only.
+- **Actions.**
+  - `7479519` — the whole studio (17 files): the engine, the worklet, the page, the build tools,
+    the tests, the site copy, the CI steps, the installer link, the README, this log.
+  - `5aea70e` — the fix below, and `release.yml` now builds the studio engine too: it publishes
+    the site, and the site carries the Studio.
+  - `.github/workflows/{ci,pages,release}.yml` — quoted the wasm toolchain step's name: it held a
+    `": "`, so YAML read it as a mapping and **both workflows failed to start** (0 s, "this run
+    likely failed because of a workflow file issue").
+- **Verification.**
+  - CI run `39564932226` → *success*: the studio engine built on the runner's clang
+    (`engine.wasm: 158,516 B`), then *web tests passed*, *studio wasm: ok*, *studio worklet: ok*,
+    *ALL HOST TESTS PASSED*.
+  - Pages run `39564932204` → *success*.
+  - The live site: `webapp/studio/{index.html, worklet.js, engine.wasm, samples.bin}` are all
+    served (engine.wasm as `application/wasm`), and the installer page has the Studio link.
+  - Headless Chromium against the live URL: the engine boots (`Sound on · 44100 Hz`), PLAY becomes
+    STOP, the sequencer runs through its steps, 2 voices alive, no console errors.
+- **Lesson.** A workflow YAML error looks like an infrastructure failure, not a syntax error:
+  look at the run's duration first (0 s = the file never parsed).
 
 ### 2026-10-21 — Studio: the browser check caught a silent engine
 

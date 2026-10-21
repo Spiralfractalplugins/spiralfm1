@@ -861,6 +861,14 @@ function studio() {
   const used_fns = new Set([...(page + worklet).matchAll(/\bst_[a-z0-9_]+/g)].map((m) => m[0]));
   const nofn = [...used_fns].filter((f) => typeof E[f] !== "function");
   ok(!nofn.length, `studio: every call the page makes is exported (${used_fns.size}${nofn.length ? ", missing " + nofn : ""})`);
+  /* the page asks the engine which parameters are lists of names: a name pointer is not a boolean
+   * (a pointer to an empty string is not 0), so every parameter used to become a drop-down of
+   * blank options */
+  ok(!/if\s*\(\s*x\.st_(?:param|global)_name\(/.test(js) && /st_param_is_enum/.test(js) && /st_global_is_enum/.test(js),
+    "studio: the page asks the engine which parameters are lists of names");
+  /* a redraw replaces the parameter rows, it does not add another one */
+  ok(/querySelectorAll\("\[data-p\]"\)\)\s*\{\s*box\.innerHTML = ""/.test(js),
+    "studio: a redraw replaces the parameter rows");
   /* the ids the page's data-p / data-g attributes name */
   const IDS = {};
   for (let k = 0; k < E.st_id_count(); k++) IDS[cstr(E.st_id_name(k))] = E.st_id(k);
@@ -868,7 +876,18 @@ function studio() {
   for (const m of page.matchAll(/ID\.([PG]_[A-Z0-9_]+)/g)) ids.add(m[1]);
   const noids = [...ids].filter((n) => !(n in IDS));
   ok(!noids.length, `studio: every parameter the page shows exists (${ids.size}${noids.length ? ", missing " + noids : ""})`);
+  /* the engine's answer to "is this a list of names?": the lists are lists, the rest are values */
+  const LISTS = ["P_LWAVE", "P_SDIV", "P_MUTE", "P_SCALE", "P_CHORD", "P_AMODE", "P_AHOLD",
+                 "P_SLRATE", "P_SLCR", "P_QUANT", "P_VOICE"];
+  const VALUES = ["P_LEVEL", "P_ATK", "P_DEC", "P_SUS", "P_REL", "P_ED_FLT", "P_ED_PIT", "P_ED_SHP",
+                  "P_ED_FX", "P_TRANS", "P_ROOT", "P_SLEN", "P_SSWING", "P_SGATE", "P_DIST", "P_CHOR",
+                  "P_DLY", "P_REV", "P_GLIDE", "P_PAN", "P_LRATE"];
   E.st_init();
+  ok(LISTS.every((n) => E.st_param_is_enum(0, IDS[n]) === 1) &&
+     VALUES.every((n) => E.st_param_is_enum(0, IDS[n]) === 0) &&
+     E.st_global_is_enum(IDS.G_ROLL) === 1 && E.st_global_is_enum(IDS.G_BPM) === 0 &&
+     E.st_param_is_enum(3, IDS.P_E0) === 1,
+    `studio: the engine says which parameters are lists (${LISTS.length} lists, ${VALUES.length} values)`);
   ok(E.st_ready() === 1 && E.st_block() === 32, "studio: the engine boots in the wasm");
   /* samples.bin is the blob the firmware embeds, so the studio's SAMPLE/GRAIN/kits are the device's */
   const hdr = join(HERE, "../build/gen/felucca_samples.h");

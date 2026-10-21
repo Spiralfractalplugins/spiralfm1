@@ -43,13 +43,8 @@ async function boot() {
     return f;
   };
   const secs = (s) => Math.round(s * x.st_rate() / x.st_block());
-  const at = (name) => {
-    for (let k = 0; k < x.st_id_count(); k++) if (cstr(x.st_id_name(k)) === name) return x.st_id(k);
-    throw new Error("no such id: " + name);
-  };
-  const ID = { P_E0: at("P_E0"), P_SLEN: at("P_SLEN") };
-  for (const n of ["P_LEVEL", "P_PAN", "P_MUTE", "P_ATK", "P_REL", "P_E1", "P_E2", "P_E3", "P_REV",
-                   "G_BPM", "G_SWING", "G_DUCK", "G_DUST"]) ID[n] = at(n);
+  const ID = {};
+  for (let k = 0; k < x.st_id_count(); k++) ID[cstr(x.st_id_name(k))] = x.st_id(k);
   return { x, cstr, render, secs, ID, engine: (i) => cstr(x.st_engine_name(i)) };
 }
 const ST_NOTE = 0, ST_TIE = 1, ST_REST = 2;      // core.h: the step's time
@@ -119,6 +114,42 @@ ok("GRAIN names its sources after SAMPLE", (() => {
   x.st_track_engine(0, GRAIN);
   return cstr(x.st_param_name(0, ID.P_E0, 0)) === cstr(x.st_smp_set_name(0));
 })());
+
+// ---- the page's controls: the engine tells the page which parameters are lists of names
+{
+  const LISTS = ["P_LWAVE", "P_SDIV", "P_MUTE", "P_SCALE", "P_CHORD", "P_AMODE", "P_AHOLD",
+                 "P_SLRATE", "P_SLCR", "P_QUANT", "P_VOICE"];
+  const VALUES = ["P_LEVEL", "P_ATK", "P_DEC", "P_SUS", "P_REL", "P_ED_FLT", "P_ED_PIT", "P_ED_SHP",
+                  "P_ED_FX", "P_TRANS", "P_ROOT", "P_SLEN", "P_SSWING", "P_SGATE", "P_DIST", "P_CHOR",
+                  "P_DLY", "P_REV", "P_GLIDE", "P_PAN", "P_LRATE"];
+  x.st_select(0);
+  x.st_track_engine(0, 0);                        // ANALOG
+  ok("the named parameters are lists of names", LISTS.every((n) => x.st_param_is_enum(0, ID[n]) === 1),
+    `(${LISTS.join(" ")})`);
+  ok("the others are values, not lists", VALUES.every((n) => x.st_param_is_enum(0, ID[n]) === 0),
+    `(${VALUES.length} of them)`);
+  ok("the global parameters: ROLL and CLICK are lists, the rest are values",
+    x.st_global_is_enum(ID.G_ROLL) === 1 && x.st_global_is_enum(ID.G_CLOCK) === 1 &&
+    x.st_global_is_enum(ID.G_BPM) === 0 && x.st_global_is_enum(ID.G_SWING) === 0 &&
+    x.st_global_is_enum(ID.G_DUST) === 0);
+  ok("the drum track's kit is a list of names",
+    x.st_param_is_enum(3, ID.P_E0) === 1 && cstr(x.st_param_label(3, ID.P_E0)) === "KIT");
+  /* LOFI's WAV# / DCY are F_INT with a name table (eng_lofi.c): the device shows a value, not a
+   * list - so "does it have names" is not the question, "is it F_ENUM" is */
+  const LOFI = NAMES.indexOf("LOFI");
+  x.st_select(0);
+  x.st_track_engine(0, LOFI);
+  x.st_param(0, ID.P_E1, 4);                      // RW_WRAM
+  x.st_param(0, ID.P_E0, 4);                      // CHIP_STEP
+  ok("LOFI's WAV# has names but is a value, not a list",
+    cstr(x.st_param_label(0, ID.P_E2)) === "WAV#" && x.st_param_is_enum(0, ID.P_E2) === 0 &&
+    cstr(x.st_param_name(0, ID.P_E2, 0)) !== "");
+  ok("LOFI's DCY has names but is a value, not a list",
+    cstr(x.st_param_label(0, ID.P_E3)) === "DCY" && x.st_param_is_enum(0, ID.P_E3) === 0 &&
+    cstr(x.st_param_text(0, ID.P_E3)).length > 0);
+  x.st_select(0);
+  x.st_track_engine(0, 0);
+}
 
 // ---- every engine sounds and EDIT 1 reads as its own control (what the page builds from)
 for (let e = 0; e < x.st_engines(); e++) {

@@ -289,6 +289,16 @@ EXPORT(const char *, st_param_name, (uint32_t t, uint32_t id, int32_t v))
     return d->names[(uint32_t)clamp(v, d->min, d->max)];
 }
 
+/* Is this parameter a list of names (a drop-down) or a value (a slider)?
+ * The firmware's own rule (editor.c ED_PARAM_GET, icons.c param_icon): the format is F_ENUM.
+ * Not "does it have names": the LOFI engine's WAV# / DCY are F_INT with a name table
+ * (eng_lofi.c), and the device shows them as a value, not as a list. */
+EXPORT(int32_t, st_param_is_enum, (uint32_t t, uint32_t id))
+{
+    const param_desc_t *d = studio_desc(t, id);
+    return (d && d->fmt == F_ENUM && d->names) ? 1 : 0;
+}
+
 static char studio_text[16];
 
 EXPORT(const char *, st_param_text, (uint32_t t, uint32_t id))
@@ -319,6 +329,11 @@ EXPORT(const char *, st_global_name, (uint32_t id, int32_t v))
     if (!d || !d->names)
         return "";
     return d->names[(uint32_t)clamp(v, d->min, d->max)];
+}
+
+EXPORT(int32_t, st_global_is_enum, (uint32_t id))
+{
+    return (id < G_COUNT && GP[id].fmt == F_ENUM && GP[id].names) ? 1 : 0;
 }
 
 static char studio_gtext[16];

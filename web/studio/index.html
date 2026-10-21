@@ -368,7 +368,7 @@ function ctlSelect(box, label, names, get, set) {
 function paramCtl(box, track, id) {
   const label = str(x.st_param_label(track, id)), min = x.st_param_min(track, id), max = x.st_param_max(track, id);
   const get = () => x.st_param_get(track, id), text = () => str(x.st_param_text(track, id));
-  if (x.st_param_name(track, id, min)) {
+  if (x.st_param_is_enum(track, id)) {              /* the engine says: this one is a list of names */
     const names = [];
     for (let v = min; v <= max; v++) names.push([v, str(x.st_param_name(track, id, v))]);
     ctlSelect(box, label, names, get, (v) => call("st_param", track, id, v));
@@ -377,7 +377,7 @@ function paramCtl(box, track, id) {
 function globalCtl(box, id) {
   const label = str(x.st_global_label(id)), min = x.st_global_min(id), max = x.st_global_max(id);
   const get = () => x.st_global_get(id), text = () => str(x.st_global_text(id));
-  if (x.st_global_name(id, min)) {
+  if (x.st_global_is_enum(id)) {
     const names = [];
     for (let v = min; v <= max; v++) names.push([v, str(x.st_global_name(id, v))]);
     ctlSelect(box, label, names, get, (v) => call("st_global", id, v));
@@ -629,8 +629,10 @@ function refresh() {
   const m = $("macro"); m.innerHTML = "";
   if (!drum) for (let i = 0; i < 4; i++) { const d = document.createElement("div"); d.className = "ctl"; m.append(d); paramCtl(d, sel, x.st_macro(sel, i)); }
   sets();
-  for (const box of document.querySelectorAll("[data-p]"))
+  for (const box of document.querySelectorAll("[data-p]")) {
+    box.innerHTML = "";                              /* a redraw replaces the row, it does not add one */
     for (const name of box.dataset.p.split(" ")) { const d = document.createElement("div"); d.className = "ctl"; box.append(d); paramCtl(d, sel, ID[name]); }
+  }
   for (const box of document.querySelectorAll("[data-g]")) globalCtl(box, ID[box.dataset.g]);
   $("oct").textContent = (x.st_octave_get() > 0 ? "+" : "") + x.st_octave_get();
   $("tie").classList.toggle("on", tieMode);

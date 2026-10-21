@@ -106,6 +106,7 @@ if command -v node >/dev/null 2>&1; then
     if [ -e build/studio/engine.wasm ]; then
         run "studio wasm: samples.bin, SAMPLE/GRAIN, the SPIRALFM1 kicks" node tests/studio_wasm_test.mjs
         run "studio worklet: the engine in the audio thread (transport, resampling)" node tests/studio_worklet_test.mjs
+        run "studio dom: the page's controls in a browser (no blank values, no extra rows)" node tests/studio_dom_test.mjs
     else
         echo "== skip studio wasm test (not built: python3 tools/build_studio.py)"
     fi

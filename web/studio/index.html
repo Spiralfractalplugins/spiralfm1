@@ -365,10 +365,22 @@ function ctlSelect(box, label, names, get, set) {
   s.onchange = () => { set(+s.value); s.blur(); refresh(); };
   box.append(l, s);
 }
+/* Is this parameter a list of names, or a value? The engine answers (the firmware's own rule:
+ * the format is F_ENUM - not "does it have names": the LOFI engine's WAV# and DCY are F_INT
+ * with a name table, and the device shows them as a value).
+ * A browser may still hold an engine.wasm from before that question existed (the page and the
+ * wasm are cached separately), so without the answer a parameter is a list if every value in its
+ * range has a name - the same rule, read off the names. */
+function namedList(min, max, nameAt) {
+  for (let v = min; v <= max; v++) if (!str(nameAt(v))) return false;
+  return true;
+}
 function paramCtl(box, track, id) {
   const label = str(x.st_param_label(track, id)), min = x.st_param_min(track, id), max = x.st_param_max(track, id);
   const get = () => x.st_param_get(track, id), text = () => str(x.st_param_text(track, id));
-  if (x.st_param_is_enum(track, id)) {              /* the engine says: this one is a list of names */
+  const isList = x.st_param_is_enum ? x.st_param_is_enum(track, id)
+    : namedList(min, max, (v) => x.st_param_name(track, id, v));
+  if (isList) {
     const names = [];
     for (let v = min; v <= max; v++) names.push([v, str(x.st_param_name(track, id, v))]);
     ctlSelect(box, label, names, get, (v) => call("st_param", track, id, v));
@@ -377,7 +389,9 @@ function paramCtl(box, track, id) {
 function globalCtl(box, id) {
   const label = str(x.st_global_label(id)), min = x.st_global_min(id), max = x.st_global_max(id);
   const get = () => x.st_global_get(id), text = () => str(x.st_global_text(id));
-  if (x.st_global_is_enum(id)) {
+  const isList = x.st_global_is_enum ? x.st_global_is_enum(id)
+    : namedList(min, max, (v) => x.st_global_name(id, v));
+  if (isList) {
     const names = [];
     for (let v = min; v <= max; v++) names.push([v, str(x.st_global_name(id, v))]);
     ctlSelect(box, label, names, get, (v) => call("st_global", id, v));

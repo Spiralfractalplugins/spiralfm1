@@ -24,10 +24,11 @@ import { tmpdir, homedir } from "node:os";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..");
+const DIR = process.env.STUDIO_DIR || join(ROOT, "build/studio");
 const PAGE = join(ROOT, "web/studio/index.html");
 const WORKLET = join(ROOT, "web/studio/worklet.js");
-const WASM = join(ROOT, "build/studio/engine.wasm");
-const BIN = join(ROOT, "build/studio/samples.bin");
+const WASM = join(DIR, "engine.wasm");
+const BIN = join(DIR, "samples.bin");
 
 let fails = 0;
 const ok = (cond, what) => { console.log(`  ${cond ? "ok  " : "FAIL"}   ${what}`); if (!cond) fails++; };
